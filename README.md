@@ -21,8 +21,8 @@ Soon.
 ### ToDo
 
 - [ ] Load balance strategies
-  - [ ] round robin
-  - [ ] random
+  - [X] round robin
+  - [X] random
   - [ ] weighted round robin
   - [ ] least connection
   - [ ] hash/sticky

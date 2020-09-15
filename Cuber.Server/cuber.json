@@ -3,7 +3,7 @@
         "Ip": "127.0.0.1",
         "Port": 50000,
         "Mode": "tcp",
-        "BalanceStrategy": "None",
+        "BalanceStrategy": "RoundRobin",
         "Targets": [
             {
                 "ip": "10.0.0.1",

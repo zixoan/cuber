@@ -2,6 +2,7 @@
 {
     public enum BalanceStrategy
     {
-        None
+        RoundRobin,
+        Random
     }
 }

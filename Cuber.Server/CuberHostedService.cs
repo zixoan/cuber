@@ -14,7 +14,9 @@ namespace Zixoan.Cuber.Server
         private readonly ILogger logger;
         private readonly CuberOptions cuberOptions;
 
-        public CuberHostedService(ILogger<CuberHostedService> logger, IOptions<CuberOptions> cuberOptions)
+        public CuberHostedService(
+            ILogger<CuberHostedService> logger, 
+            IOptions<CuberOptions> cuberOptions)
         {
             this.logger = logger;
             this.cuberOptions = cuberOptions.Value;
