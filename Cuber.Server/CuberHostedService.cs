@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using Zixoan.Cuber.Server.Config;
+using Zixoan.Cuber.Server.Proxy;
 
 namespace Zixoan.Cuber.Server
 {
@@ -13,13 +14,16 @@ namespace Zixoan.Cuber.Server
     {
         private readonly ILogger logger;
         private readonly CuberOptions cuberOptions;
+        private readonly IProxy proxy;
 
         public CuberHostedService(
             ILogger<CuberHostedService> logger, 
-            IOptions<CuberOptions> cuberOptions)
+            IOptions<CuberOptions> cuberOptions,
+            IProxy proxy)
         {
             this.logger = logger;
             this.cuberOptions = cuberOptions.Value;
+            this.proxy = proxy;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -27,12 +31,16 @@ namespace Zixoan.Cuber.Server
             this.logger.LogInformation("Starting Cuber server");
             this.logger.LogInformation($"Using load balance strategy {this.cuberOptions.BalanceStrategy} with {this.cuberOptions.Targets.Count} targets");
 
+            this.proxy.Listen(this.cuberOptions.Ip, this.cuberOptions.Port);
+
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            this.logger.LogInformation("Stopping Cuber service");
+            this.proxy.Stop();
+
+            this.logger.LogInformation("Stopped Cuber service");
 
             return Task.CompletedTask;
         }
