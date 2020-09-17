@@ -184,20 +184,10 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
         private void Close(ProxyConnectionState state)
         {
-            if (state.Closed)
+            if (state.Close())
             {
-                return;
+                this.logger.LogDebug($"Closed connection: Client [{state.UpStreamEndPoint}] <-> Proxy [{this.ip}:{this.port}] <-> Target [{state.DownStreamEndPoint}]");
             }
-
-            state.Closed = true;
-
-            state.UpStreamSocket.Close();
-            state.DownStreamSocket.Close();
-
-            state.UpStreamSocket = null;
-            state.DownStreamSocket = null;
-
-            this.logger.LogDebug($"Closed connection: Client [{state.UpStreamEndPoint}] <-> Proxy [{this.ip}:{this.port}] <-> Target [{state.DownStreamEndPoint}]");
         }
     }
 }
