@@ -1,4 +1,4 @@
-﻿{
+{
     "Cuber": {
         "Ip": "127.0.0.1",
         "Port": 50000,
@@ -9,7 +9,9 @@
                 "ip": "10.0.0.1",
                 "port": 8080
             }
-        ]
+        ],
+        "UpStreamBufferSize": 8192,
+        "DownStreamBufferSize": 8192
     },
     "Logging": {
         "IncludeScopes": true,

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 using Zixoan.Cuber.Server.Balancing;
 using Zixoan.Cuber.Server.Config;
@@ -50,7 +51,7 @@ namespace Zixoan.Cuber.Server
                         ProxyBase proxy = options.Mode switch
                         {
                             Mode.Udp => throw new NotImplementedException(),
-                            _ => new TcpProxy(loggerFactory.CreateLogger<TcpProxy>(), loadBalanceStrategy),
+                            _ => new TcpProxy(loggerFactory.CreateLogger<TcpProxy>(), Options.Create(options), loadBalanceStrategy),
                         };
                         return proxy;
                     });

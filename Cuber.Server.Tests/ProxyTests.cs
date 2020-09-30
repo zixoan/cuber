@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 
 using Xunit;
 
@@ -45,8 +46,7 @@ namespace Zixoan.Cuber.Server.Tests
                 }
             };
 
-            IProxy tcpProxy = new TcpProxy(new NullLogger<TcpProxy>(), new RoundRobinLoadBalanceStrategy(targets));
-
+            IProxy tcpProxy = new TcpProxy(new NullLogger<TcpProxy>(), Options.Create(new CuberOptions()), new RoundRobinLoadBalanceStrategy(targets));
             tcpProxy.Listen(IPAddress.Loopback.ToString(), proxyServerPort);
 
             // Start async accept of the tcp proxy connection
