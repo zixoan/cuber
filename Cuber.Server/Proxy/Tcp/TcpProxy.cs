@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Net.Sockets;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 using Zixoan.Cuber.Server.Balancing;
 using Zixoan.Cuber.Server.Config;
@@ -12,6 +13,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
     public class TcpProxy : ProxyBase
     {
         private readonly ILogger logger;
+        private readonly CuberOptions cuberOptions;
 
         private Socket socket;
         private bool running;
@@ -21,10 +23,12 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
         public TcpProxy(
             ILogger<TcpProxy> logger, 
+            IOptions<CuberOptions> options,
             ILoadBalanceStrategy loadBalanceStrategy) 
             : base(loadBalanceStrategy)
         {
             this.logger = logger;
+            this.cuberOptions = options.Value;
         }
 
         public override void Listen(string ip, ushort port)
@@ -65,7 +69,9 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                 ProxyConnectionState state = new ProxyConnectionState()
                 {
                     UpStreamSocket = socket,
-                    DownStreamSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+                    DownStreamSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp),
+                    UpStreamBuffer = new byte[this.cuberOptions.UpStreamBufferSize],
+                    DownStreamBuffer = new byte[this.cuberOptions.DownStreamBufferSize]
                 };
                 state.DownStreamSocket.BeginConnect(target.Ip, target.Port, new AsyncCallback(OnDownStreamConnect), state);
 
