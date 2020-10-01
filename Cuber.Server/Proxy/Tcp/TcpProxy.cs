@@ -95,6 +95,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
                 if (state.DownStreamSocket.Connected)
                 {
+                    state.Connected = true;
                     state.UpStreamEndPoint = state.UpStreamSocket.RemoteEndPoint.ToString();
                     state.DownStreamEndPoint = state.DownStreamSocket.RemoteEndPoint.ToString();
 
@@ -190,7 +191,9 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
         private void Close(ProxyConnectionState state)
         {
-            if (state.Close())
+            bool wasConnected = state.Connected;
+
+            if (state.Close() && wasConnected)
             {
                 this.logger.LogDebug($"Closed connection: Client [{state.UpStreamEndPoint}] <-> Proxy [{this.ip}:{this.port}] <-> Target [{state.DownStreamEndPoint}]");
             }
