@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Net;
 using System.Net.Sockets;
 
@@ -22,7 +22,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
         private ushort port;
 
         public TcpProxy(
-            ILogger<TcpProxy> logger, 
+            ILogger<TcpProxy> logger,
             IOptions<CuberOptions> options,
             ILoadBalanceStrategy loadBalanceStrategy) 
             : base(loadBalanceStrategy)
@@ -71,7 +71,8 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                     UpStreamSocket = socket,
                     DownStreamSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp),
                     UpStreamBuffer = new byte[this.cuberOptions.UpStreamBufferSize],
-                    DownStreamBuffer = new byte[this.cuberOptions.DownStreamBufferSize]
+                    DownStreamBuffer = new byte[this.cuberOptions.DownStreamBufferSize],
+                    Target = target
                 };
                 state.DownStreamSocket.BeginConnect(target.Ip, target.Port, new AsyncCallback(OnDownStreamConnect), state);
 
@@ -96,6 +97,8 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                 if (state.DownStreamSocket.Connected)
                 {
                     state.Connected = true;
+                    state.Target.IncrementConnections();
+
                     state.UpStreamEndPoint = state.UpStreamSocket.RemoteEndPoint.ToString();
                     state.DownStreamEndPoint = state.DownStreamSocket.RemoteEndPoint.ToString();
 
@@ -195,6 +198,8 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
             if (state.Close() && wasConnected)
             {
+                state.Target.DecrementConnections();
+
                 this.logger.LogDebug($"Closed connection: Client [{state.UpStreamEndPoint}] <-> Proxy [{this.ip}:{this.port}] <-> Target [{state.DownStreamEndPoint}]");
             }
         }
