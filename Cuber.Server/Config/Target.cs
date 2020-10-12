@@ -1,11 +1,21 @@
 ﻿using System;
+using System.Threading;
 
 namespace Zixoan.Cuber.Server.Config
 {
     public class Target
     {
+        private int connections;
+
         public string Ip { get; set; }
         public int Port { get; set; }
+        public int Connections => this.connections;
+
+        public void IncrementConnections()
+            => Interlocked.Increment(ref this.connections);
+
+        public void DecrementConnections()
+            => Interlocked.Decrement(ref this.connections);
 
         public override bool Equals(object obj)
         {

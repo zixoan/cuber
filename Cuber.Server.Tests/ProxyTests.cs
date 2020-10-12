@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -49,28 +49,42 @@ namespace Zixoan.Cuber.Server.Tests
             IProxy tcpProxy = new TcpProxy(new NullLogger<TcpProxy>(), Options.Create(new CuberOptions()), new RoundRobinLoadBalanceStrategy(targets));
             tcpProxy.Listen(IPAddress.Loopback.ToString(), proxyServerPort);
 
+            Assert.Equal(0, targets[0].Connections);
+
             // Start async accept of the tcp proxy connection
             // that will happen below
             Task<Socket> waitingAccept = targetServer.AcceptSocketAsync();
 
             // Connect client to tcp proxy, 
             // which will then connect to the target server
-            using TcpClient tcpClient = new TcpClient();
-            tcpClient.Connect(IPAddress.Loopback, proxyServerPort);
+            using (TcpClient tcpClient = new TcpClient())
+            {
+                tcpClient.Connect(IPAddress.Loopback, proxyServerPort);
 
-            Socket acceptedClientOnTarget = await waitingAccept;
+                using Socket acceptedClientOnTarget = await waitingAccept;
 
-            // Client -> Proxy -> Target
-            await tcpClient.GetStream().WriteAsync(expectedBufferTarget);
-            await acceptedClientOnTarget.ReceiveAsync(actualBuffer, SocketFlags.None);
-            Assert.Equal(expectedBufferTarget, actualBuffer);
+                // Give the async target connect some time to complete
+                await Task.Delay(25);
 
-            // Target -> Proxy -> Client
-            await acceptedClientOnTarget.SendAsync(expectedBufferClient, SocketFlags.None);
-            await tcpClient.GetStream().ReadAsync(actualBuffer);
-            Assert.Equal(expectedBufferClient, actualBuffer);
+                Assert.Equal(1, targets[0].Connections);
+
+                // Client -> Proxy -> Target
+                await tcpClient.GetStream().WriteAsync(expectedBufferTarget);
+                await acceptedClientOnTarget.ReceiveAsync(actualBuffer, SocketFlags.None);
+                Assert.Equal(expectedBufferTarget, actualBuffer);
+
+                // Target -> Proxy -> Client
+                await acceptedClientOnTarget.SendAsync(expectedBufferClient, SocketFlags.None);
+                await tcpClient.GetStream().ReadAsync(actualBuffer);
+                Assert.Equal(expectedBufferClient, actualBuffer);
+            }
 
             targetServer.Stop();
+
+            // Give the proxy connection some time to disconnect properly
+            await Task.Delay(25);
+
+            Assert.Equal(0, targets[0].Connections);
         }
     }
 }

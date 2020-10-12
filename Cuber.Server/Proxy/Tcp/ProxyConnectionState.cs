@@ -1,4 +1,6 @@
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
+
+using Zixoan.Cuber.Server.Config;
 
 namespace Zixoan.Cuber.Server.Proxy.Tcp
 {
@@ -34,6 +36,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                 }
             }
         }
+        public Target Target { get; set; }
 
         public bool Close()
         {
