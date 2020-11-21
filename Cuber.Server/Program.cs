@@ -19,7 +19,7 @@ namespace Zixoan.Cuber.Server
     {
         public static async Task Main(string[] args)
         {
-            var hostBuilder = new HostBuilder()
+            IHostBuilder hostBuilder = new HostBuilder()
                 .ConfigureAppConfiguration((hostContext, configApp) =>
                 {
                     configApp.SetBasePath(Directory.GetCurrentDirectory());
@@ -45,8 +45,8 @@ namespace Zixoan.Cuber.Server
                     {
                         CuberOptions options = hostContext.Configuration.GetSection("Cuber").Get<CuberOptions>();
                         
-                        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-                        var loadBalanceStrategy = serviceProvider.GetService<ILoadBalanceStrategy>();
+                        ILoggerFactory loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+                        ILoadBalanceStrategy loadBalanceStrategy = serviceProvider.GetService<ILoadBalanceStrategy>();
 
                         ProxyBase proxy = options.Mode switch
                         {

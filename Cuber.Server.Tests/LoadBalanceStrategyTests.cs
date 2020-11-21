@@ -19,7 +19,7 @@ namespace Zixoan.Cuber.Server.Tests
         [Fact]
         public void TestRoundRobinStrategy()
         {
-            var roundRobin = LoadBalanceStrategyFactory.Create(BalanceStrategy.RoundRobin, targets);
+            ILoadBalanceStrategy roundRobin = LoadBalanceStrategyFactory.Create(BalanceStrategy.RoundRobin, targets);
 
             Assert.Equal(targets[0], roundRobin.GetTarget());
             Assert.Equal(targets[1], roundRobin.GetTarget());
@@ -33,7 +33,7 @@ namespace Zixoan.Cuber.Server.Tests
         [Fact]
         public void TestRandomStrategy()
         {
-            var random = LoadBalanceStrategyFactory.Create(BalanceStrategy.Random, targets);
+            ILoadBalanceStrategy random = LoadBalanceStrategyFactory.Create(BalanceStrategy.Random, targets);
 
             Assert.Contains(random.GetTarget(), targets);
             Assert.Contains(random.GetTarget(), targets);
@@ -44,7 +44,7 @@ namespace Zixoan.Cuber.Server.Tests
         [Fact]
         public void TestLeastConnectionStrategy()
         {
-            var leastConnection = new LeastConnectionLoadBalanceStrategy(targets);
+            ILoadBalanceStrategy leastConnection = new LeastConnectionLoadBalanceStrategy(targets);
 
             targets[1].IncrementConnections();
             targets[1].IncrementConnections();
