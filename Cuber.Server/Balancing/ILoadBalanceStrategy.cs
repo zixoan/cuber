@@ -4,6 +4,6 @@ namespace Zixoan.Cuber.Server.Balancing
 {
     public interface ILoadBalanceStrategy
     {
-        public Target GetTarget();
+        Target GetTarget();
     }
 }

@@ -1,6 +1,5 @@
-﻿using System.Collections.Generic;
-
-using Zixoan.Cuber.Server.Config;
+﻿using Zixoan.Cuber.Server.Config;
+using Zixoan.Cuber.Server.Provider;
 
 namespace Zixoan.Cuber.Server.Balancing
 {
@@ -8,12 +7,12 @@ namespace Zixoan.Cuber.Server.Balancing
     {
         private int currentTarget;
 
-        public RoundRobinLoadBalanceStrategy(List<Target> targets) 
-            : base(targets)
+        public RoundRobinLoadBalanceStrategy(ITargetProvider targetProvider) 
+            : base(targetProvider)
         {
         }
 
         public override Target GetTarget()
-            => this.targets[currentTarget++ % this.targets.Count];
+            => this.targetProvider[currentTarget++ % this.targetProvider.Count];
     }
 }

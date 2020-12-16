@@ -1,18 +1,16 @@
-using System.Collections.Generic;
-using System.Linq;
-
 using Zixoan.Cuber.Server.Config;
+using Zixoan.Cuber.Server.Provider;
 
 namespace Zixoan.Cuber.Server.Balancing
 {
     public class LeastConnectionLoadBalanceStrategy : LoadBalanceStrategyBase
     {
-        public LeastConnectionLoadBalanceStrategy(List<Target> targets)
-            : base(targets)
+        public LeastConnectionLoadBalanceStrategy(ITargetProvider targetProvider)
+            : base(targetProvider)
         {
         }
 
         public override Target GetTarget()
-            => this.targets.Aggregate((min, other) => other.Connections < min.Connections ? other : min);
+            => this.targetProvider.Aggregate((min, other) => other.Connections < min.Connections ? other : min);
     }
 }
