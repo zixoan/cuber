@@ -1,16 +1,15 @@
-﻿using System.Collections.Generic;
-
-using Zixoan.Cuber.Server.Config;
+﻿using Zixoan.Cuber.Server.Config;
+using Zixoan.Cuber.Server.Provider;
 
 namespace Zixoan.Cuber.Server.Balancing
 {
     public abstract class LoadBalanceStrategyBase : ILoadBalanceStrategy
     {
-        protected readonly List<Target> targets;
+        protected readonly ITargetProvider targetProvider;
 
-        protected LoadBalanceStrategyBase(List<Target> targets)
+        protected LoadBalanceStrategyBase(ITargetProvider targetProvider)
         {
-            this.targets = targets;
+            this.targetProvider = targetProvider;
         }
 
         public abstract Target GetTarget();

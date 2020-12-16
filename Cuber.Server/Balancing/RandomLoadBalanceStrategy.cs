@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 
 using Zixoan.Cuber.Server.Config;
+using Zixoan.Cuber.Server.Provider;
 
 namespace Zixoan.Cuber.Server.Balancing
 {
@@ -9,13 +9,16 @@ namespace Zixoan.Cuber.Server.Balancing
     {
         private readonly Random random;
 
-        public RandomLoadBalanceStrategy(List<Target> targets)
-            : base(targets)
+        public RandomLoadBalanceStrategy(ITargetProvider targetProvider)
+            : base(targetProvider)
         {
             this.random = new Random();
         }
 
         public override Target GetTarget()
-            => this.targets[this.random.Next(this.targets.Count)];
+        {
+            int count = this.targetProvider.Count;
+            return this.targetProvider[this.random.Next(count)];
+        }
     }
 }

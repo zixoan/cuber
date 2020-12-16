@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 
 using Zixoan.Cuber.Server.Balancing;
 using Zixoan.Cuber.Server.Config;
+using Zixoan.Cuber.Server.Provider;
 using Zixoan.Cuber.Server.Proxy;
 using Zixoan.Cuber.Server.Proxy.Tcp;
 
@@ -36,10 +37,16 @@ namespace Zixoan.Cuber.Server
                             .AddConfiguration(hostContext.Configuration.GetSection("Logging"));
                     });
                     services.Configure<CuberOptions>(hostContext.Configuration.GetSection("Cuber"));
+                    services.AddSingleton<ITargetProvider, ThreadSafeTargetProvider>(serviceProvider =>
+                    {
+                        CuberOptions options = hostContext.Configuration.GetSection("Cuber").Get<CuberOptions>();
+                        return new ThreadSafeTargetProvider(options.Targets); 
+                    });
                     services.AddSingleton(serviceProvider =>
                     {
                         CuberOptions options = hostContext.Configuration.GetSection("Cuber").Get<CuberOptions>();
-                        return LoadBalanceStrategyFactory.Create(options.BalanceStrategy, options.Targets);
+                        ITargetProvider targetProvider = serviceProvider.GetService<ITargetProvider>();
+                        return LoadBalanceStrategyFactory.Create(options.BalanceStrategy, targetProvider);
                     });
                     services.AddSingleton<IProxy, ProxyBase>(serviceProvider =>
                     {

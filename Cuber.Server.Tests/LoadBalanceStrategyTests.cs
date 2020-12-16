@@ -4,6 +4,7 @@ using Xunit;
 
 using Zixoan.Cuber.Server.Balancing;
 using Zixoan.Cuber.Server.Config;
+using Zixoan.Cuber.Server.Provider;
 
 namespace Zixoan.Cuber.Server.Tests
 {
@@ -16,10 +17,12 @@ namespace Zixoan.Cuber.Server.Tests
                 new Target { Ip = "10.0.0.3", Port = 8082 }
             };
 
+        private static readonly ITargetProvider TargetProvider = new SimpleTargetProvider(Targets);
+
         [Fact]
         public void TestRoundRobinStrategy()
         {
-            ILoadBalanceStrategy roundRobin = LoadBalanceStrategyFactory.Create(BalanceStrategy.RoundRobin, Targets);
+            ILoadBalanceStrategy roundRobin = LoadBalanceStrategyFactory.Create(BalanceStrategy.RoundRobin, TargetProvider);
 
             for (int i = 0; i < 26; i++)
             {
@@ -30,7 +33,7 @@ namespace Zixoan.Cuber.Server.Tests
         [Fact]
         public void TestRandomStrategy()
         {
-            ILoadBalanceStrategy random = LoadBalanceStrategyFactory.Create(BalanceStrategy.Random, Targets);
+            ILoadBalanceStrategy random = LoadBalanceStrategyFactory.Create(BalanceStrategy.Random, TargetProvider);
 
             Assert.Contains(random.GetTarget(), Targets);
             Assert.Contains(random.GetTarget(), Targets);
@@ -41,7 +44,7 @@ namespace Zixoan.Cuber.Server.Tests
         [Fact]
         public void TestLeastConnectionStrategy()
         {
-            ILoadBalanceStrategy leastConnection = new LeastConnectionLoadBalanceStrategy(Targets);
+            ILoadBalanceStrategy leastConnection = new LeastConnectionLoadBalanceStrategy(TargetProvider);
 
             Targets[1].IncrementConnections();
             Targets[1].IncrementConnections();

@@ -1,17 +1,16 @@
-﻿using System.Collections.Generic;
-
-using Zixoan.Cuber.Server.Config;
+﻿using Zixoan.Cuber.Server.Config;
+using Zixoan.Cuber.Server.Provider;
 
 namespace Zixoan.Cuber.Server.Balancing
 {
     public class LoadBalanceStrategyFactory
     {
-        public static ILoadBalanceStrategy Create(BalanceStrategy balanceStrategy, List<Target> targets)
+        public static ILoadBalanceStrategy Create(BalanceStrategy balanceStrategy, ITargetProvider targetProvider)
         {
             return balanceStrategy switch
             {
-                BalanceStrategy.Random => new RandomLoadBalanceStrategy(targets),
-                _ => new RoundRobinLoadBalanceStrategy(targets)
+                BalanceStrategy.Random => new RandomLoadBalanceStrategy(targetProvider),
+                _ => new RoundRobinLoadBalanceStrategy(targetProvider)
             };
         }
     }

@@ -11,6 +11,7 @@ using Xunit;
 
 using Zixoan.Cuber.Server.Balancing;
 using Zixoan.Cuber.Server.Config;
+using Zixoan.Cuber.Server.Provider;
 using Zixoan.Cuber.Server.Proxy;
 using Zixoan.Cuber.Server.Proxy.Tcp;
 
@@ -45,8 +46,9 @@ namespace Zixoan.Cuber.Server.Tests
                     Port = ((IPEndPoint)targetServer.LocalEndpoint).Port 
                 }
             };
+            ITargetProvider targetProvider = new SimpleTargetProvider(targets);
 
-            IProxy tcpProxy = new TcpProxy(new NullLogger<TcpProxy>(), Options.Create(new CuberOptions()), new RoundRobinLoadBalanceStrategy(targets));
+            IProxy tcpProxy = new TcpProxy(new NullLogger<TcpProxy>(), Options.Create(new CuberOptions()), new RoundRobinLoadBalanceStrategy(targetProvider));
             tcpProxy.Listen(IPAddress.Loopback.ToString(), proxyServerPort);
 
             Assert.Equal(0, targets[0].Connections);
