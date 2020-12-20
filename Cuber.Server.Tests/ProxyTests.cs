@@ -19,17 +19,10 @@ namespace Zixoan.Cuber.Server.Tests
 {
     public class ProxyTests
     {
-        private static ushort GetServerPort()
-        {
-            using Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
-            return (ushort)((IPEndPoint)socket.LocalEndPoint).Port;
-        }
-
         [Fact]
         public async Task TcpProxyConnectAndEcho()
         {
-            ushort proxyServerPort = GetServerPort();
+            ushort proxyServerPort = PortHelper.GetFreePort();
 
             byte[] expectedBufferTarget = Encoding.UTF8.GetBytes("Hello, target!");
             byte[] expectedBufferClient = Encoding.UTF8.GetBytes("Hello, client!");

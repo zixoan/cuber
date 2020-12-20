@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 
 using Zixoan.Cuber.Server.Balancing;
 using Zixoan.Cuber.Server.Config;
+using Zixoan.Cuber.Server.Probe;
 using Zixoan.Cuber.Server.Provider;
 using Zixoan.Cuber.Server.Proxy;
 using Zixoan.Cuber.Server.Proxy.Tcp;
@@ -63,6 +64,19 @@ namespace Zixoan.Cuber.Server
                         return proxy;
                     });
                     services.AddHostedService<CuberHostedService>();
+                    
+                    CuberOptions options = hostContext.Configuration.GetSection("Cuber").Get<CuberOptions>();
+                    if (options.HealthProbe != null)
+                    {
+                        HealthProbeType? type = options.HealthProbe.Type;
+                        if (type == null)
+                        {
+                            throw new ArgumentException("At least Type must be defined when HealthProbe is defined in config");
+                        }
+
+                        services.AddSingleton<IHealthProbe>(serviceProvider => HealthProbeFactory.Create(type.Value, options));
+                        services.AddHostedService<HealthProbeBackgroundService>();
+                    }
                 });
 
             await hostBuilder.RunConsoleAsync();
