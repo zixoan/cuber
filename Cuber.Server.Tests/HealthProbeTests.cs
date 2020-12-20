@@ -1,6 +1,8 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.Options;
 
 using Xunit;
 
@@ -11,10 +13,12 @@ namespace Zixoan.Cuber.Server.Tests
 {
     public class HealthProbeTests
     {
+        private readonly IOptions<CuberOptions> CuberOptions = Options.Create(new CuberOptions { HealthProbe = new HealthProbe() });
+
         [Fact]
         public async Task TcpHealthProbeSuccessful()
         {
-            IHealthProbe tcpProbe = new TcpHealthProbe();
+            IHealthProbe tcpProbe = new TcpHealthProbe(CuberOptions);
 
             TcpListener tcpListener = new TcpListener(IPAddress.Loopback, 0);
             tcpListener.Start();
@@ -23,7 +27,8 @@ namespace Zixoan.Cuber.Server.Tests
 
             Task<bool> reachableTask = tcpProbe.IsReachable(target);
 
-            await tcpListener.AcceptSocketAsync();
+            Socket client = await tcpListener.AcceptSocketAsync();
+            client.Close();
 
             Assert.True(await reachableTask);
         }
@@ -31,7 +36,7 @@ namespace Zixoan.Cuber.Server.Tests
         [Fact]
         public async Task TcpHealthProbeUnsuccessful()
         {
-            IHealthProbe tcpProbe = new TcpHealthProbe();
+            IHealthProbe tcpProbe = new TcpHealthProbe(CuberOptions);
 
             Target target = new Target { Ip = IPAddress.Loopback.ToString(), Port = 0 };
 
