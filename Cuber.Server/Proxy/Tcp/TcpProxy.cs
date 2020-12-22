@@ -67,8 +67,8 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                 Target target = this.loadBalanceStrategy.GetTarget();
                 if (target == null)
                 {
+                    this.logger.LogError($"Closed connection: Client [{socket.RemoteEndPoint}] because no target was available");
                     socket.Close();
-                    this.logger.LogError($"Closed connection from client {socket.RemoteEndPoint}, because no target was available");
                     return;
                 }
 
