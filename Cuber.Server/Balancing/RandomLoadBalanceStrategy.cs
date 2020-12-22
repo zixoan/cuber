@@ -18,6 +18,11 @@ namespace Zixoan.Cuber.Server.Balancing
         public override Target GetTarget()
         {
             int count = this.targetProvider.Count;
+            if (count == 0)
+            {
+                return null;
+            }
+
             return this.targetProvider[this.random.Next(count)];
         }
     }

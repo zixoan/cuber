@@ -69,7 +69,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
                 Target target = this.loadBalanceStrategy.GetTarget();
                 if (target == null)
                 {
-                    this.logger.LogError($"Closed connection from client {clientEndpoint}, because no target was available");
+                    this.logger.LogError($"Closed connection: Client [{clientEndpoint}] because no target was available");
                     return;
                 }
 

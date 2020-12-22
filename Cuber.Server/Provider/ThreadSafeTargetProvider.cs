@@ -14,7 +14,7 @@ namespace Zixoan.Cuber.Server.Probe
 
         public ThreadSafeTargetProvider(IList<Target> targets)
         {
-            this.targets = targets;
+            this.targets = targets ?? new List<Target>();
             this.readWriteLock = new ReaderWriterLockSlim();
         }
 
@@ -103,6 +103,11 @@ namespace Zixoan.Cuber.Server.Probe
 
             try
             {
+                if (this.targets.Count == 0)
+                {
+                    return null;
+                }
+
                 return this.targets.Aggregate(accumulator);
             }
             finally

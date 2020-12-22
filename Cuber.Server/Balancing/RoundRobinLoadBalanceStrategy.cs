@@ -13,6 +13,14 @@ namespace Zixoan.Cuber.Server.Balancing
         }
 
         public override Target GetTarget()
-            => this.targetProvider[currentTarget++ % this.targetProvider.Count];
+        {
+            int count = this.targetProvider.Count;
+            if (count == 0)
+            {
+                return null;
+            }
+
+            return this.targetProvider[currentTarget++ % count];
+        }
     }
 }

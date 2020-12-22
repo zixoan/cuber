@@ -29,7 +29,7 @@ namespace Zixoan.Cuber.Server
         public Task StartAsync(CancellationToken cancellationToken)
         {
             this.logger.LogInformation("Starting Cuber server");
-            this.logger.LogInformation($"Using load balance strategy {this.cuberOptions.BalanceStrategy} with {this.cuberOptions.Targets.Count} targets");
+            this.logger.LogInformation($"Using load balance strategy {this.cuberOptions.BalanceStrategy} with {this.cuberOptions.Targets?.Count ?? 0} targets");
 
             this.proxy.Listen(this.cuberOptions.Ip, this.cuberOptions.Port);
 
