@@ -46,6 +46,19 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
             this.socket.BeginReceiveFrom(this.upStreamReceiveBuffer, 0, this.upStreamReceiveBuffer.Length, SocketFlags.None, ref endPoint, new AsyncCallback(OnReceiveFromUpStream), null);
         }
 
+        public override void Stop()
+        {
+            if (!this.running)
+            {
+                return;
+            }
+
+            this.running = false;
+            this.socket.Close();
+
+            this.logger.LogInformation("Udp proxy stopped");
+        }
+
         private void OnReceiveFromUpStream(IAsyncResult ar)
         {
             try
@@ -54,6 +67,11 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
                 int received = this.socket.EndReceiveFrom(ar, ref clientEndpoint);
 
                 Target target = this.loadBalanceStrategy.GetTarget();
+                if (target == null)
+                {
+                    this.logger.LogError($"Closed connection from client {clientEndpoint}, because no target was available");
+                    return;
+                }
 
                 UdpMessageContext context = new UdpMessageContext
                 {
@@ -97,19 +115,6 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
         private void OnSendToUpStream(IAsyncResult ar)
         {
             int sent = this.socket.EndSendTo(ar);
-        }
-
-        public override void Stop()
-        {
-            if (!this.running)
-            {
-                return;
-            }
-
-            this.running = false;
-            this.socket.Close();
-
-            this.logger.LogInformation($"Udp proxy stopped");
         }
     }
 }
