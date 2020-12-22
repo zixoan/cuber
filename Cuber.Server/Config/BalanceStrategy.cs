@@ -3,6 +3,7 @@
     public enum BalanceStrategy
     {
         RoundRobin,
-        Random
+        Random,
+        LeastConnection
     }
 }
