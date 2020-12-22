@@ -55,7 +55,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             this.running = false;
             this.socket.Close();
 
-            this.logger.LogInformation($"Tcp proxy stopped");
+            this.logger.LogInformation("Tcp proxy stopped");
         }
 
         private void OnAccept(IAsyncResult ar)
@@ -65,6 +65,12 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                 Socket socket = this.socket.EndAccept(ar);
 
                 Target target = this.loadBalanceStrategy.GetTarget();
+                if (target == null)
+                {
+                    socket.Close();
+                    this.logger.LogError($"Closed connection from client {socket.RemoteEndPoint}, because no target was available");
+                    return;
+                }
 
                 ProxyConnectionState state = new ProxyConnectionState()
                 {
