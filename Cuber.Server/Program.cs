@@ -14,6 +14,7 @@ using Zixoan.Cuber.Server.Probe;
 using Zixoan.Cuber.Server.Provider;
 using Zixoan.Cuber.Server.Proxy;
 using Zixoan.Cuber.Server.Proxy.Tcp;
+using Zixoan.Cuber.Server.Proxy.Udp;
 
 namespace Zixoan.Cuber.Server
 {
@@ -58,7 +59,7 @@ namespace Zixoan.Cuber.Server
 
                         ProxyBase proxy = options.Mode switch
                         {
-                            Mode.Udp => throw new NotImplementedException(),
+                            Mode.Udp => new UdpProxy(loggerFactory.CreateLogger<UdpProxy>(), Options.Create(options), loadBalanceStrategy),
                             _ => new TcpProxy(loggerFactory.CreateLogger<TcpProxy>(), Options.Create(options), loadBalanceStrategy),
                         };
                         return proxy;

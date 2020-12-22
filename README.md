@@ -20,20 +20,20 @@ Soon.
 
 ### ToDo
 
-- [ ] Load balance strategies
-  - [X] round robin
-  - [X] random
-  - [ ] weighted round robin
-  - [ ] least connection
-  - [ ] hash/sticky
-- [ ] TCP proxying
-- [ ] UDP proxying
-- [ ] TCP and UDP proxying combined
-- [ ] health checks
-  - [ ] TCP
-  - [ ] HTTP
-- [ ] custom read and write timeout handling
-- [ ] highly configurable
+* [ ] Load balance strategies
+  * [X] round robin
+  * [X] random
+  * [ ] weighted round robin
+  * [X] least connection
+  * [ ] hash/sticky
+* [X] TCP proxying
+* [ ] UDP proxying
+* [ ] TCP and UDP proxying combined
+* [X] health checks
+  * [X] TCP
+  * [X] HTTP
+* [ ] custom read and write timeout handling
+* [ ] highly configurable
 
 ### Usage
 
@@ -41,7 +41,7 @@ TODO
 
 ### Contributing
 
-Any contibutions are greatly appreciated. 
+Any contibutions are greatly appreciated.
 Just fork the project, create a new feature branch, commit and push your changes and open a pull request.
 
 ### License

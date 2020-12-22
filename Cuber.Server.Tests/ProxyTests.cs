@@ -14,6 +14,7 @@ using Zixoan.Cuber.Server.Config;
 using Zixoan.Cuber.Server.Provider;
 using Zixoan.Cuber.Server.Proxy;
 using Zixoan.Cuber.Server.Proxy.Tcp;
+using Zixoan.Cuber.Server.Proxy.Udp;
 
 namespace Zixoan.Cuber.Server.Tests
 {
@@ -80,6 +81,50 @@ namespace Zixoan.Cuber.Server.Tests
             await Task.Delay(25);
 
             Assert.Equal(0, targets[0].Connections);
+
+            tcpProxy.Stop();
+        }
+
+        [Fact]
+        public async Task UdpProxyConnectAndEcho()
+        {
+            ushort proxyServerPort = PortHelper.GetFreePort();
+
+            byte[] expectedBufferTarget = Encoding.UTF8.GetBytes("Hello, target!");
+            byte[] expectedBufferClient = Encoding.UTF8.GetBytes("Hello, client!");
+
+            UdpClient targetServer = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
+
+            List<Target> targets = new List<Target>
+            {
+                new Target
+                { 
+                    Ip = IPAddress.Loopback.ToString(), 
+                    Port = ((IPEndPoint)targetServer.Client.LocalEndPoint).Port 
+                }
+            };
+            ITargetProvider targetProvider = new SimpleTargetProvider(targets);
+
+            IProxy udpProxy = new UdpProxy(new NullLogger<UdpProxy>(), Options.Create(new CuberOptions()), new RoundRobinLoadBalanceStrategy(targetProvider));
+            udpProxy.Listen(IPAddress.Loopback.ToString(), proxyServerPort);
+
+            using (UdpClient udpClient = new UdpClient())
+            {
+                udpClient.Connect(IPAddress.Loopback, proxyServerPort);
+                
+                // Client -> Proxy -> Target
+                await udpClient.SendAsync(expectedBufferTarget, expectedBufferTarget.Length);
+                UdpReceiveResult udpReceiveResultTarget = await targetServer.ReceiveAsync();
+                Assert.Equal(expectedBufferTarget, udpReceiveResultTarget.Buffer);
+
+                // Target -> Proxy -> Client
+                await targetServer.SendAsync(expectedBufferClient, expectedBufferClient.Length, udpReceiveResultTarget.RemoteEndPoint);
+                UdpReceiveResult udpReceiveResultClient = await udpClient.ReceiveAsync();
+                Assert.Equal(expectedBufferClient, udpReceiveResultClient.Buffer);
+            }
+
+            targetServer.Close();
+            udpProxy.Stop();
         }
     }
 }
