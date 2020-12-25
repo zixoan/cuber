@@ -11,8 +11,8 @@
 
 ### About the project
 
-Cuber will be a reverse proxy server with support for TCP and UDP traffic and the ability to load balance between different target (backend) servers.
-Health checks will also be available to dynamically remove backend servers from the load balance strategy, so that traffic is not forwarded to offline or crashed servers.
+Cuber is a reverse proxy server with support for TCP and UDP traffic and the ability to load balance between different target (backend) servers.
+Health checks are also available to dynamically remove backend servers from the load balance strategy, so that traffic is not forwarded to offline or crashed servers.
 
 ### Features
 
@@ -27,11 +27,14 @@ Soon.
   * [X] least connection
   * [ ] hash/sticky
 * [X] TCP proxying
-* [ ] UDP proxying
+* [X] UDP proxying
 * [ ] TCP and UDP proxying combined
 * [X] health checks
   * [X] TCP
   * [X] HTTP
+* [ ] both internet protocol versions
+  * [X] IPv4
+  * [ ] IPv6
 * [ ] custom read and write timeout handling
 * [ ] highly configurable
 
