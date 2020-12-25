@@ -4,7 +4,7 @@ using Zixoan.Cuber.Server.Config;
 
 namespace Zixoan.Cuber.Server.Proxy.Tcp
 {
-    public class ProxyConnectionState
+    public class TcpConnectionState
     {
         private readonly object stateLock = new object();
 
