@@ -72,7 +72,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                     return;
                 }
 
-                ProxyConnectionState state = new ProxyConnectionState()
+                TcpConnectionState state = new TcpConnectionState()
                 {
                     UpStreamSocket = socket,
                     DownStreamSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp),
@@ -94,7 +94,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
         private void OnDownStreamConnect(IAsyncResult ar)
         {
-            ProxyConnectionState state = (ProxyConnectionState)ar.AsyncState;
+            TcpConnectionState state = (TcpConnectionState)ar.AsyncState;
 
             try
             {
@@ -126,7 +126,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
         private void OnReceiveDownStream(IAsyncResult ar)
         {
-            ProxyConnectionState state = (ProxyConnectionState)ar.AsyncState;
+            TcpConnectionState state = (TcpConnectionState)ar.AsyncState;
 
             try
             {
@@ -147,7 +147,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
         private void OnSendUpStream(IAsyncResult ar)
         {
-            ProxyConnectionState state = (ProxyConnectionState)ar.AsyncState;
+            TcpConnectionState state = (TcpConnectionState)ar.AsyncState;
 
             try
             {
@@ -163,7 +163,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
         private void OnReceiveUpStream(IAsyncResult ar)
         {
-            ProxyConnectionState state = (ProxyConnectionState)ar.AsyncState;
+            TcpConnectionState state = (TcpConnectionState)ar.AsyncState;
 
             try
             {
@@ -184,7 +184,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
         private void OnSendDownStream(IAsyncResult ar)
         {
-            ProxyConnectionState state = (ProxyConnectionState)ar.AsyncState;
+            TcpConnectionState state = (TcpConnectionState)ar.AsyncState;
 
             try
             {
@@ -198,7 +198,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             }
         }
 
-        private void Close(ProxyConnectionState state)
+        private void Close(TcpConnectionState state)
         {
             bool wasConnected = state.Connected;
 
