@@ -6,7 +6,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 {
     public class ProxyConnectionState
     {
-        public readonly object stateLock = new object();
+        private readonly object stateLock = new object();
 
         private bool connected;
         private bool closed;

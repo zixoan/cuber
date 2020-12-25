@@ -88,7 +88,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             {
                 this.logger.LogError(e, "Error in accept callback, stopping tcp proxy");
 
-                Stop();
+                this.Stop();
             }
         }
 
@@ -115,12 +115,12 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                 }
                 else
                 {
-                    Close(state);
+                    this.Close(state);
                 }
             }
             catch (Exception)
             {
-                Close(state);
+                this.Close(state);
             }
         }
 
@@ -133,7 +133,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                 int received = state.DownStreamSocket.EndReceive(ar);
                 if (received == 0)
                 {
-                    Close(state);
+                    this.Close(state);
                     return;
                 }
 
@@ -141,7 +141,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             }
             catch (Exception)
             {
-                Close(state);
+                this.Close(state);
             }
         }
 
@@ -157,7 +157,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             }
             catch (Exception)
             {
-                Close(state);
+                this.Close(state);
             }
         }
 
@@ -170,7 +170,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                 int received = state.UpStreamSocket.EndReceive(ar);
                 if (received == 0)
                 {
-                    Close(state);
+                    this.Close(state);
                     return;
                 }
 
@@ -178,7 +178,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             }
             catch (Exception)
             {
-                Close(state);
+                this.Close(state);
             }
         }
 
@@ -194,7 +194,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             }
             catch (Exception)
             {
-                Close(state);
+                this.Close(state);
             }
         }
 
