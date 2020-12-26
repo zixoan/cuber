@@ -97,7 +97,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
                 }
                 else
                 {
-                    Target target = this.loadBalanceStrategy.GetTarget();
+                    Target target = this.loadBalanceStrategy.GetTarget(upStreamEndpoint);
                     if (target == null)
                     {
                         this.logger.LogError($"Closed connection: Client [{upStreamEndpoint}] because no target was available");

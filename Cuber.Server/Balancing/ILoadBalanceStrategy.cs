@@ -1,9 +1,11 @@
-﻿using Zixoan.Cuber.Server.Config;
+﻿using System.Net;
+
+using Zixoan.Cuber.Server.Config;
 
 namespace Zixoan.Cuber.Server.Balancing
 {
     public interface ILoadBalanceStrategy
     {
-        Target GetTarget();
+        Target GetTarget(EndPoint sourceEndPoint);
     }
 }

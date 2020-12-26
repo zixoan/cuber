@@ -4,6 +4,7 @@
     {
         RoundRobin,
         Random,
-        LeastConnection
+        LeastConnection,
+        Hash
     }
 }

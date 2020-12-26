@@ -25,7 +25,7 @@ Soon.
   * [X] random
   * [ ] weighted round robin
   * [X] least connection
-  * [ ] hash/sticky
+  * [X] hash/sticky
 * [X] TCP proxying
 * [X] UDP proxying
 * [ ] TCP and UDP proxying combined
