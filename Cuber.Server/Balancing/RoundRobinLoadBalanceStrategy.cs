@@ -1,4 +1,6 @@
-﻿using Zixoan.Cuber.Server.Config;
+﻿using System.Net;
+
+using Zixoan.Cuber.Server.Config;
 using Zixoan.Cuber.Server.Provider;
 
 namespace Zixoan.Cuber.Server.Balancing
@@ -12,7 +14,7 @@ namespace Zixoan.Cuber.Server.Balancing
         {
         }
 
-        public override Target GetTarget()
+        public override Target GetTarget(EndPoint sourceEndPoint)
         {
             int count = this.targetProvider.Count;
             if (count == 0)

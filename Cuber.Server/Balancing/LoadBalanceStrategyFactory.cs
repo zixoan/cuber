@@ -11,6 +11,7 @@ namespace Zixoan.Cuber.Server.Balancing
             {
                 BalanceStrategy.Random => new RandomLoadBalanceStrategy(targetProvider),
                 BalanceStrategy.LeastConnection => new LeastConnectionLoadBalanceStrategy(targetProvider),
+                BalanceStrategy.Hash => new HashLoadBalanceStrategy(targetProvider),
                 _ => new RoundRobinLoadBalanceStrategy(targetProvider)
             };
         }

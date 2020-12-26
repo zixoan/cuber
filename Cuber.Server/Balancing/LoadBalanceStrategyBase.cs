@@ -1,4 +1,6 @@
-﻿using Zixoan.Cuber.Server.Config;
+﻿using System.Net;
+
+using Zixoan.Cuber.Server.Config;
 using Zixoan.Cuber.Server.Provider;
 
 namespace Zixoan.Cuber.Server.Balancing
@@ -12,6 +14,6 @@ namespace Zixoan.Cuber.Server.Balancing
             this.targetProvider = targetProvider;
         }
 
-        public abstract Target GetTarget();
+        public abstract Target GetTarget(EndPoint sourceEndPoint);
     }
 }

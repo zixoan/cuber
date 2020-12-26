@@ -35,7 +35,7 @@ namespace Zixoan.Cuber.Server.Tests
             List<Target> targets = new List<Target>
             {
                 new Target
-                { 
+                {
                     Ip = IPAddress.Loopback.ToString(), 
                     Port = ((IPEndPoint)targetServer.LocalEndpoint).Port 
                 }
@@ -98,7 +98,7 @@ namespace Zixoan.Cuber.Server.Tests
             List<Target> targets = new List<Target>
             {
                 new Target
-                { 
+                {
                     Ip = IPAddress.Loopback.ToString(), 
                     Port = ((IPEndPoint)targetServer.Client.LocalEndPoint).Port 
                 }
