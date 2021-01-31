@@ -19,7 +19,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
                 }
             }
         }
-        public Socket Socket { get; set; }
+        public Socket DownStreamSocket { get; set; }
         public Target Target { get; set; }
         public EndPoint UpStreamEndPoint { get; set; }
         public byte[] DownStreamReceiveBuffer { get; set; }
@@ -38,7 +38,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
                     return false;
                 }
 
-                this.Socket.Close();
+                this.DownStreamSocket.Close();
                 this.closed = true;
 
                 return true;

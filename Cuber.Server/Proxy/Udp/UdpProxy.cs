@@ -89,9 +89,9 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
 
                 if (this.clients.TryGetValue(upStreamEndpoint, out UdpConnectionState state))
                 {
-                    state.Socket.BeginSendTo(this.upStreamReceiveBuffer, 0, received, SocketFlags.None, state.DownStreamEndPoint, new AsyncCallback(OnSendToDownStream), state);
+                    state.DownStreamSocket.BeginSendTo(this.upStreamReceiveBuffer, 0, received, SocketFlags.None, state.DownStreamEndPoint, new AsyncCallback(OnSendToDownStream), state);
                     EndPoint targetEndPoint = state.DownStreamEndPoint;
-                    state.Socket.BeginReceiveFrom(state.DownStreamReceiveBuffer, 0, state.DownStreamReceiveBuffer.Length, SocketFlags.None, ref targetEndPoint, new AsyncCallback(OnReceiveFromDownStream), state);
+                    state.DownStreamSocket.BeginReceiveFrom(state.DownStreamReceiveBuffer, 0, state.DownStreamReceiveBuffer.Length, SocketFlags.None, ref targetEndPoint, new AsyncCallback(OnReceiveFromDownStream), state);
 
                     state.LastActivity = DateTime.Now.Ticks;
                 }
@@ -107,20 +107,20 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
                     EndPoint downStreamEndPoint = new IPEndPoint(IPAddress.Parse(target.Ip), target.Port);
                     UdpConnectionState udpConnectionState = new UdpConnectionState
                     {
-                        Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp),
+                        DownStreamSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp),
                         Target = target,
                         UpStreamEndPoint = upStreamEndpoint,
                         DownStreamEndPoint = downStreamEndPoint,
                         DownStreamReceiveBuffer = new byte[this.cuberOptions.DownStreamBufferSize]
                     };
-                    udpConnectionState.Socket.Bind(new IPEndPoint(((IPEndPoint)this.socket.LocalEndPoint).Address, 0));
+                    udpConnectionState.DownStreamSocket.Bind(new IPEndPoint(((IPEndPoint)this.socket.LocalEndPoint).Address, 0));
 
                     this.clients.Add(upStreamEndpoint, udpConnectionState);
 
                     target.IncrementConnections();
 
-                    udpConnectionState.Socket.BeginSendTo(this.upStreamReceiveBuffer, 0, received, SocketFlags.None, udpConnectionState.DownStreamEndPoint, new AsyncCallback(OnSendToDownStream), udpConnectionState);
-                    udpConnectionState.Socket.BeginReceiveFrom(udpConnectionState.DownStreamReceiveBuffer, 0, udpConnectionState.DownStreamReceiveBuffer.Length, SocketFlags.None, ref downStreamEndPoint, new AsyncCallback(OnReceiveFromDownStream), udpConnectionState);
+                    udpConnectionState.DownStreamSocket.BeginSendTo(this.upStreamReceiveBuffer, 0, received, SocketFlags.None, udpConnectionState.DownStreamEndPoint, new AsyncCallback(OnSendToDownStream), udpConnectionState);
+                    udpConnectionState.DownStreamSocket.BeginReceiveFrom(udpConnectionState.DownStreamReceiveBuffer, 0, udpConnectionState.DownStreamReceiveBuffer.Length, SocketFlags.None, ref downStreamEndPoint, new AsyncCallback(OnReceiveFromDownStream), udpConnectionState);
 
                     this.logger.LogDebug($"New connection: Client [{upStreamEndpoint}] <-> Proxy [{this.ip}:{this.port}] <-> Target [{downStreamEndPoint}]");
                 }
@@ -142,7 +142,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
 
             try
             {
-                _ = state.Socket.EndSendTo(ar);
+                _ = state.DownStreamSocket.EndSendTo(ar);
             }
             catch (Exception)
             {
@@ -157,7 +157,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
             try
             {
                 EndPoint endPoint = state.DownStreamEndPoint;
-                int received = state.Socket.EndReceiveFrom(ar, ref endPoint);
+                int received = state.DownStreamSocket.EndReceiveFrom(ar, ref endPoint);
 
                 this.socket.BeginSendTo(state.DownStreamReceiveBuffer, 0, received, SocketFlags.None, state.UpStreamEndPoint, new AsyncCallback(OnSendToUpStream), state);
 
