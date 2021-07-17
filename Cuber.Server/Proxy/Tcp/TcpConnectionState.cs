@@ -50,8 +50,8 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                 this.closed = true;
                 this.connected = false;
 
-                UpStreamSocket.Close();
-                DownStreamSocket.Close();
+                this.UpStreamSocket.Close();
+                this.DownStreamSocket.Close();
 
                 return true;
             }
