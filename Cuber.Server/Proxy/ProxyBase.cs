@@ -4,12 +4,10 @@ namespace Zixoan.Cuber.Server.Proxy
 {
     public abstract class ProxyBase : IProxy
     {
-        protected ILoadBalanceStrategy loadBalanceStrategy;
+        protected readonly ILoadBalanceStrategy loadBalanceStrategy;
 
         public ProxyBase(ILoadBalanceStrategy loadBalanceStrategy)
-        {
-            this.loadBalanceStrategy = loadBalanceStrategy;
-        }
+            => this.loadBalanceStrategy = loadBalanceStrategy; 
 
         public abstract void Listen(string ip, ushort port);
         public abstract void Stop();

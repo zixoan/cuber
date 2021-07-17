@@ -9,6 +9,7 @@ namespace Zixoan.Cuber.Server.Config
 
         public string? Ip { get; set; }
         public ushort Port { get; set; }
+        public int Backlog { get; set; }
         public Mode Mode { get; set; }
         public BalanceStrategy BalanceStrategy { get; set; }
         public List<Target>? Targets { get; set; }
