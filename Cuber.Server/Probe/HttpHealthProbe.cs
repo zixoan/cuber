@@ -18,7 +18,7 @@ namespace Zixoan.Cuber.Server.Probe
         public HttpHealthProbe(IOptions<CuberOptions> options)
         {
             this.cuberOptions = options.Value;
-            TimeSpan timeout = TimeSpan.FromMilliseconds(this.cuberOptions.HealthProbe.Timeout ?? DefaultTimeout);
+            TimeSpan timeout = TimeSpan.FromMilliseconds(this.cuberOptions.HealthProbe?.Timeout ?? DefaultTimeout);
             this.httpClient = new HttpClient { Timeout = timeout };
         }
 
@@ -29,8 +29,8 @@ namespace Zixoan.Cuber.Server.Probe
                 UriBuilder uriBuilder = new UriBuilder(
                     "http",
                     target.Ip,
-                    this.cuberOptions.HealthProbe.Port ?? target.Port,
-                    this.cuberOptions.HealthProbe.Path
+                    this.cuberOptions.HealthProbe?.Port ?? target.Port,
+                    this.cuberOptions.HealthProbe?.Path
                 );
 
                 HttpResponseMessage response = await httpClient.GetAsync(uriBuilder.Uri);

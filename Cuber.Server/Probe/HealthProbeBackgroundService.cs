@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
 using Zixoan.Cuber.Server.Config;
 using Zixoan.Cuber.Server.Provider;
 
@@ -14,19 +17,28 @@ namespace Zixoan.Cuber.Server.Probe
         private readonly ILogger<HealthProbeBackgroundService> logger;
         private readonly ITargetProvider targetProvider;
         private readonly IHealthProbe healthProbe;
+        private readonly CuberOptions cuberOptions;
         private readonly IList<Target> initialTargets;
         private readonly IList<Target> offlineTargets;
 
         public HealthProbeBackgroundService(
             ILogger<HealthProbeBackgroundService> logger, 
             ITargetProvider targetProvider,
-            IHealthProbe healthProbe)
+            IHealthProbe healthProbe,
+            IOptions<CuberOptions> cuberOptions)
         {
             this.logger = logger;
             this.targetProvider = targetProvider;
             this.healthProbe = healthProbe;
+            this.cuberOptions = cuberOptions.Value;
             this.initialTargets = this.targetProvider.Targets;
             this.offlineTargets = new List<Target>();
+        }
+
+        public override Task StartAsync(CancellationToken cancellationToken)
+        {
+            this.logger.LogInformation($"Starting {this.cuberOptions.HealthProbe?.Type} health probe");
+            return Task.CompletedTask;
         }
 
         protected override async Task ExecuteAsync(CancellationToken cancelToken)

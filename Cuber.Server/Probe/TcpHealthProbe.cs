@@ -22,7 +22,7 @@ namespace Zixoan.Cuber.Server.Probe
             try
             {
                 using TcpClient tcpClient = new TcpClient();
-                await tcpClient.ConnectAsync(target.Ip, this.cuberOptions.HealthProbe.Port ?? target.Port);
+                await tcpClient.ConnectAsync(target.Ip, this.cuberOptions.HealthProbe?.Port ?? target.Port);
 
                 return true;
             }
