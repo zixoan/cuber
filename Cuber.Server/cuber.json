@@ -2,8 +2,7 @@
     "Cuber": {
         "Ip": "127.0.0.1",
         "Port": 50000,
-        "Mode": "tcp",
-        "BalanceStrategy": "RoundRobin",
+        "Backlog": 25,
         "Targets": [
             {
                 "ip": "10.0.0.1",
