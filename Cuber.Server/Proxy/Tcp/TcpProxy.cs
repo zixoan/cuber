@@ -37,7 +37,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             this.port = port;
             this.socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             this.socket.Bind(new IPEndPoint(IPAddress.Parse(this.ip), this.port));
-            this.socket.Listen(25);
+            this.socket.Listen(this.cuberOptions.Backlog);
             this.running = true;
 
             this.logger.LogInformation($"Tcp proxy listening on {this.ip}:{this.port}");
