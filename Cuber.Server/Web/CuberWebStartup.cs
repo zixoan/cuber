@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using Zixoan.Cuber.Server.Config;
+using Zixoan.Cuber.Server.Web.Middleware;
 
 namespace Zixoan.Cuber.Server.Web
 {
@@ -24,6 +25,8 @@ namespace Zixoan.Cuber.Server.Web
         public void Configure(IApplicationBuilder app)
         {
             app.UseRouting();
+
+            app.UseMiddleware<HeaderApiKeyMiddleware>();
 
             app.UseEndpoints(endpoints =>
             {
