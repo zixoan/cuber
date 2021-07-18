@@ -16,6 +16,14 @@ namespace Zixoan.Cuber.Server.Config
         public HealthProbe? HealthProbe { get; set; }
         public int UpStreamBufferSize { get; set; } = DefaultBufferSize;
         public int DownStreamBufferSize { get; set; } = DefaultBufferSize;
+        public Web Web { get; set; } = new Web();
+    }
+
+    public class Web
+    {
+        public string[] Urls { get; set; } = new[] { "http://localhost:50001/" };
+        public string ApiKeyHeaderName { get; set; } = "X-Api-Key";
+        public string ApiKey { get; set; } = "changeme";
     }
 
     public class HealthProbe
