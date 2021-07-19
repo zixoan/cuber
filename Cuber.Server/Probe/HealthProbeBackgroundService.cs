@@ -18,7 +18,6 @@ namespace Zixoan.Cuber.Server.Probe
         private readonly ITargetProvider targetProvider;
         private readonly IHealthProbe healthProbe;
         private readonly CuberOptions cuberOptions;
-        private readonly IList<Target> initialTargets;
         private readonly IList<Target> offlineTargets;
 
         public HealthProbeBackgroundService(
@@ -31,23 +30,24 @@ namespace Zixoan.Cuber.Server.Probe
             this.targetProvider = targetProvider;
             this.healthProbe = healthProbe;
             this.cuberOptions = cuberOptions.Value;
-            this.initialTargets = this.targetProvider.Targets;
             this.offlineTargets = new List<Target>();
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
         {
             this.logger.LogInformation($"Starting {this.cuberOptions.HealthProbe?.Type} health probe");
-            return Task.CompletedTask;
+            return base.StartAsync(cancellationToken);
         }
 
-        protected override async Task ExecuteAsync(CancellationToken cancelToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            while (!cancelToken.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                for (int i = 0; i < this.initialTargets.Count; i++)
+                IList<Target> targets = this.targetProvider.Targets;
+
+                for (int i = 0; i < targets.Count; i++)
                 {
-                    Target target = this.initialTargets[i];
+                    Target target = targets[i];
 
                     bool reachable = await this.healthProbe.IsReachable(target);
                     if (!reachable && !this.offlineTargets.Contains(target))
@@ -66,7 +66,7 @@ namespace Zixoan.Cuber.Server.Probe
                     }
                 }
 
-                await Task.Delay(5000, cancelToken);
+                await Task.Delay(5000, cancellationToken);
             }
         }
     }
