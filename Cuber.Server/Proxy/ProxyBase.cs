@@ -9,7 +9,7 @@ namespace Zixoan.Cuber.Server.Proxy
         public ProxyBase(ILoadBalanceStrategy loadBalanceStrategy)
             => this.loadBalanceStrategy = loadBalanceStrategy; 
 
-        public abstract void Listen(string ip, ushort port);
+        public abstract void Start(string ip, ushort port);
         public abstract void Stop();
     }
 }

@@ -31,7 +31,7 @@ namespace Zixoan.Cuber.Server
             this.logger.LogInformation("Starting Cuber server");
             this.logger.LogInformation($"Using load balance strategy {this.cuberOptions.BalanceStrategy} with {this.cuberOptions.Targets?.Count ?? 0} targets");
 
-            this.proxy.Listen(this.cuberOptions.Ip, this.cuberOptions.Port);
+            this.proxy.Start(this.cuberOptions.Ip, this.cuberOptions.Port);
 
             return Task.CompletedTask;
         }

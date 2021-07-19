@@ -2,7 +2,7 @@
 {
     public interface IProxy
     {
-        void Listen(string ip, ushort port);
+        void Start(string ip, ushort port);
         void Stop();
     }
 }

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -5,6 +7,7 @@ using Microsoft.Extensions.Options;
 using Zixoan.Cuber.Server.Balancing;
 using Zixoan.Cuber.Server.Config;
 using Zixoan.Cuber.Server.Proxy;
+using Zixoan.Cuber.Server.Proxy.Multi;
 using Zixoan.Cuber.Server.Proxy.Tcp;
 using Zixoan.Cuber.Server.Proxy.Udp;
 
@@ -21,12 +24,19 @@ namespace Zixoan.Cuber.Server.Extensions
                 ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
                 ILoadBalanceStrategy loadBalanceStrategy = serviceProvider.GetRequiredService<ILoadBalanceStrategy>();
 
-                ProxyBase proxy = options.Value.Mode switch
+                switch (options.Value.Mode)
                 {
-                    Mode.Udp => new UdpProxy(loggerFactory.CreateLogger<UdpProxy>(), options, loadBalanceStrategy),
-                    _ => new TcpProxy(loggerFactory.CreateLogger<TcpProxy>(), options, loadBalanceStrategy),
-                };
-                return proxy;
+                    case Mode.Udp:
+                        return new UdpProxy(loggerFactory.CreateLogger<UdpProxy>(), options, loadBalanceStrategy);
+                    case Mode.Multi:
+                    {
+                        TcpProxy tcpProxy = new TcpProxy(loggerFactory.CreateLogger<TcpProxy>(), options, loadBalanceStrategy);
+                        UdpProxy udpProxy = new UdpProxy(loggerFactory.CreateLogger<UdpProxy>(), options, loadBalanceStrategy);
+                        return new MultiProxy(loggerFactory.CreateLogger<MultiProxy>(), new List<IProxy> { tcpProxy, udpProxy }, loadBalanceStrategy);
+                    }
+                    default:
+                        return new TcpProxy(loggerFactory.CreateLogger<TcpProxy>(), options, loadBalanceStrategy);
+                }
             });
             return @this;
         }

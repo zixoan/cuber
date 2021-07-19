@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
@@ -40,7 +40,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
             this.cuberOptions = options.Value;
         }
 
-        public override void Listen(string ip, ushort port)
+        public override void Start(string ip, ushort port)
         {
             this.ip = ip;
             this.port = port;
