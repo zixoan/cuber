@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,17 +30,14 @@ namespace Zixoan.Cuber.Server
 
             ITargetProvider targetProvider = new ThreadSafeTargetProvider(cuberOptions.Targets);
 
-            IHostBuilder hostBuilder = CreateConsoleHostBuilder(configuration, targetProvider);
-            IWebHostBuilder webHostBuilder = CreateWebHostBuilder(configuration, cuberOptions, targetProvider);
+            IHostBuilder hostBuilder = CreateConsoleHostBuilder(configuration, cuberOptions.Web.Urls, targetProvider);
 
-            await Task.WhenAny(
-                webHostBuilder.Build().RunAsync(),
-                hostBuilder.RunConsoleAsync()
-            );
+            await hostBuilder.RunConsoleAsync();
         }
 
         private static IHostBuilder CreateConsoleHostBuilder(
             IConfiguration configuration,
+            string[] urls,
             ITargetProvider targetProvider)
         {
             IHostBuilder hostBuilder = new HostBuilder()
@@ -67,28 +63,20 @@ namespace Zixoan.Cuber.Server
                         .AddProxy();
 
                     services.AddHostedService<CuberHostedService>();
-                });
-            return hostBuilder;
-        }
-
-        private static IWebHostBuilder CreateWebHostBuilder(
-            IConfiguration configuration,
-            CuberOptions cuberOptions,
-            ITargetProvider targetProvider)
-        {
-            IWebHostBuilder webHostBuilder = WebHost.CreateDefaultBuilder()
-                .UseStartup<CuberWebStartup>()
-                .UseUrls(cuberOptions.Web.Urls)
-                .ConfigureAppConfiguration((hostContext, config) =>
-                {
-                    config.SetBasePath(Directory.GetCurrentDirectory());
-                    config.AddConfiguration(configuration);
                 })
-                .ConfigureServices(services =>
+                .ConfigureWebHost(webConfig =>
                 {
-                    services.AddSingleton(targetProvider);
-                });
-            return webHostBuilder;
+                    webConfig.UseKestrel();
+                    webConfig.UseStartup<CuberWebStartup>();
+                    webConfig.UseUrls(urls);
+                    webConfig.ConfigureLogging(logging =>
+                    {
+                        logging.AddConsole();
+                        logging.AddDebug();
+                    });
+                })
+                .UseConsoleLifetime();
+            return hostBuilder;
         }
     }
 }
