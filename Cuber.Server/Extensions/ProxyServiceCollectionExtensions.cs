@@ -10,6 +10,7 @@ using Zixoan.Cuber.Server.Proxy;
 using Zixoan.Cuber.Server.Proxy.Multi;
 using Zixoan.Cuber.Server.Proxy.Tcp;
 using Zixoan.Cuber.Server.Proxy.Udp;
+using Zixoan.Cuber.Server.Stats;
 
 namespace Zixoan.Cuber.Server.Extensions
 {
@@ -22,20 +23,21 @@ namespace Zixoan.Cuber.Server.Extensions
                 IOptions<CuberOptions> options = serviceProvider.GetRequiredService<IOptions<CuberOptions>>();
                 
                 ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+                IStatsService statsService = serviceProvider.GetRequiredService<IStatsService>();
                 ILoadBalanceStrategy loadBalanceStrategy = serviceProvider.GetRequiredService<ILoadBalanceStrategy>();
 
                 switch (options.Value.Mode)
                 {
                     case Mode.Udp:
-                        return new UdpProxy(loggerFactory.CreateLogger<UdpProxy>(), options, loadBalanceStrategy);
+                        return new UdpProxy(loggerFactory.CreateLogger<UdpProxy>(), options, statsService, loadBalanceStrategy);
                     case Mode.Multi:
                     {
-                        TcpProxy tcpProxy = new TcpProxy(loggerFactory.CreateLogger<TcpProxy>(), options, loadBalanceStrategy);
-                        UdpProxy udpProxy = new UdpProxy(loggerFactory.CreateLogger<UdpProxy>(), options, loadBalanceStrategy);
+                        TcpProxy tcpProxy = new TcpProxy(loggerFactory.CreateLogger<TcpProxy>(), options, statsService, loadBalanceStrategy);
+                        UdpProxy udpProxy = new UdpProxy(loggerFactory.CreateLogger<UdpProxy>(), options, statsService, loadBalanceStrategy);
                         return new MultiProxy(loggerFactory.CreateLogger<MultiProxy>(), new List<IProxy> { tcpProxy, udpProxy }, loadBalanceStrategy);
                     }
                     default:
-                        return new TcpProxy(loggerFactory.CreateLogger<TcpProxy>(), options, loadBalanceStrategy);
+                        return new TcpProxy(loggerFactory.CreateLogger<TcpProxy>(), options, statsService, loadBalanceStrategy);
                 }
             });
             return @this;

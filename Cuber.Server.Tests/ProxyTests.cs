@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -42,7 +42,7 @@ namespace Zixoan.Cuber.Server.Tests
             };
             ITargetProvider targetProvider = new SimpleTargetProvider(targets);
 
-            IProxy tcpProxy = new TcpProxy(new NullLogger<TcpProxy>(), Options.Create(new CuberOptions()), new RoundRobinLoadBalanceStrategy(targetProvider));
+            IProxy tcpProxy = new TcpProxy(new NullLogger<TcpProxy>(), Options.Create(new CuberOptions()), new NullStatsService(), new RoundRobinLoadBalanceStrategy(targetProvider));
             tcpProxy.Start(IPAddress.Loopback.ToString(), proxyServerPort);
 
             Assert.Equal(0, targets[0].Connections);
@@ -105,7 +105,7 @@ namespace Zixoan.Cuber.Server.Tests
             };
             ITargetProvider targetProvider = new SimpleTargetProvider(targets);
 
-            IProxy udpProxy = new UdpProxy(new NullLogger<UdpProxy>(), Options.Create(new CuberOptions()), new RoundRobinLoadBalanceStrategy(targetProvider));
+            IProxy udpProxy = new UdpProxy(new NullLogger<UdpProxy>(), Options.Create(new CuberOptions()), new NullStatsService(), new RoundRobinLoadBalanceStrategy(targetProvider));
             udpProxy.Start(IPAddress.Loopback.ToString(), proxyServerPort);
 
             using (UdpClient udpClient = new UdpClient())

@@ -19,7 +19,7 @@ namespace Zixoan.Cuber.Server.Probe
                 case HealthProbeType.Http:
                     return new HttpHealthProbe(options);
                 default:
-                    throw new ArgumentException($"Unknown health probe type, only tcp is currently supported");
+                    throw new ArgumentException($"Unknown health probe type, only tcp and http are currently supported");
             }
         }
     }

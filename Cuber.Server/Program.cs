@@ -9,8 +9,6 @@ using Microsoft.Extensions.Logging;
 
 using Zixoan.Cuber.Server.Config;
 using Zixoan.Cuber.Server.Extensions;
-using Zixoan.Cuber.Server.Probe;
-using Zixoan.Cuber.Server.Provider;
 using Zixoan.Cuber.Server.Web;
 
 namespace Zixoan.Cuber.Server
@@ -28,17 +26,14 @@ namespace Zixoan.Cuber.Server
             CuberOptions cuberOptions = new CuberOptions();
             configuration.GetSection("Cuber").Bind(cuberOptions);
 
-            ITargetProvider targetProvider = new ThreadSafeTargetProvider(cuberOptions.Targets);
-
-            IHostBuilder hostBuilder = CreateConsoleHostBuilder(configuration, cuberOptions.Web.Urls, targetProvider);
+            IHostBuilder hostBuilder = CreateConsoleHostBuilder(configuration, cuberOptions.Web.Urls);
 
             await hostBuilder.RunConsoleAsync();
         }
 
         private static IHostBuilder CreateConsoleHostBuilder(
             IConfiguration configuration,
-            string[] urls,
-            ITargetProvider targetProvider)
+            string[] urls)
         {
             IHostBuilder hostBuilder = new HostBuilder()
                 .ConfigureAppConfiguration((hostContext, config) =>
@@ -57,10 +52,11 @@ namespace Zixoan.Cuber.Server
                     services.Configure<CuberOptions>(configuration.GetSection("Cuber"));
 
                     services
-                        .AddSingleton(targetProvider)
+                        .AddTargetProvider()
                         .AddLoadBalancing()
                         .AddHealthProbe()
-                        .AddProxy();
+                        .AddProxy()
+                        .AddStats();
 
                     services.AddHostedService<CuberHostedService>();
                 })
@@ -71,8 +67,9 @@ namespace Zixoan.Cuber.Server
                     webConfig.UseUrls(urls);
                     webConfig.ConfigureLogging(logging =>
                     {
-                        logging.AddConsole();
-                        logging.AddDebug();
+                        logging
+                            .AddConsole()
+                            .AddConfiguration(configuration.GetSection("Logging"));
                     });
                 })
                 .UseConsoleLifetime();

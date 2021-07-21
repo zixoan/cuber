@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Net;
 using System.Net.Sockets;
 
@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 
 using Zixoan.Cuber.Server.Balancing;
 using Zixoan.Cuber.Server.Config;
+using Zixoan.Cuber.Server.Stats;
 
 namespace Zixoan.Cuber.Server.Proxy.Tcp
 {
@@ -21,14 +22,19 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
         private string ip;
         private ushort port;
 
+        private IStatsService statsService;
+        private ProxyStats proxyStats;
+
         public TcpProxy(
             ILogger<TcpProxy> logger,
             IOptions<CuberOptions> options,
+            IStatsService statsService,
             ILoadBalanceStrategy loadBalanceStrategy) 
             : base(loadBalanceStrategy)
         {
             this.logger = logger;
             this.cuberOptions = options.Value;
+            this.statsService = statsService;
         }
 
         public override void Start(string ip, ushort port)
@@ -39,6 +45,9 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             this.socket.Bind(new IPEndPoint(IPAddress.Parse(this.ip), this.port));
             this.socket.Listen(this.cuberOptions.Backlog);
             this.running = true;
+
+            this.proxyStats = new ProxyStats(DateTimeOffset.Now.ToUnixTimeSeconds());
+            this.statsService.Add("tcp", this.proxyStats);
 
             this.logger.LogInformation($"Tcp proxy listening on {this.ip}:{this.port}");
 
@@ -54,6 +63,8 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
             this.running = false;
             this.socket.Close();
+
+            this.statsService.Remove("tcp");
 
             this.logger.LogInformation("Tcp proxy stopped");
         }
@@ -80,19 +91,19 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                     DownStreamBuffer = new byte[this.cuberOptions.DownStreamBufferSize],
                     Target = target
                 };
-                state.DownStreamSocket.BeginConnect(target.Ip, target.Port, new AsyncCallback(OnDownStreamConnect), state);
+                state.DownStreamSocket.BeginConnect(target.Ip, target.Port, new AsyncCallback(OnDownstreamConnect), state);
 
                 this.socket.BeginAccept(new AsyncCallback(OnAccept), null);
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                this.logger.LogError(e, "Error in accept callback, stopping tcp proxy");
+                this.logger.LogError(exception, "Error in accept callback, stopping tcp proxy");
 
                 this.Stop();
             }
         }
 
-        private void OnDownStreamConnect(IAsyncResult ar)
+        private void OnDownstreamConnect(IAsyncResult ar)
         {
             TcpConnectionState state = (TcpConnectionState)ar.AsyncState;
 
@@ -108,10 +119,12 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                     state.UpStreamEndPoint = state.UpStreamSocket.RemoteEndPoint.ToString();
                     state.DownStreamEndPoint = state.DownStreamSocket.RemoteEndPoint.ToString();
 
-                    this.logger.LogDebug($"New connection: Client [{state.UpStreamEndPoint}] <-> Proxy [{this.ip}:{this.port}] <-> Target [{state.DownStreamEndPoint}]");
+                    this.proxyStats.IncrementActiveConnections();
 
-                    state.UpStreamSocket.BeginReceive(state.UpStreamBuffer, 0, state.UpStreamBuffer.Length, SocketFlags.None, new AsyncCallback(OnReceiveUpStream), state);
-                    state.DownStreamSocket.BeginReceive(state.DownStreamBuffer, 0, state.DownStreamBuffer.Length, SocketFlags.None, new AsyncCallback(OnReceiveDownStream), state);
+                    this.logger.LogDebug($"New connection: Client [{state.UpStreamEndPoint}] <-> Cuber Proxy [{this.ip}:{this.port}] <-> Target [{state.DownStreamEndPoint}]");
+
+                    state.UpStreamSocket.BeginReceive(state.UpStreamBuffer, 0, state.UpStreamBuffer.Length, SocketFlags.None, new AsyncCallback(OnReceiveUpstream), state);
+                    state.DownStreamSocket.BeginReceive(state.DownStreamBuffer, 0, state.DownStreamBuffer.Length, SocketFlags.None, new AsyncCallback(OnReceiveDownstream), state);
                 }
                 else
                 {
@@ -124,7 +137,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             }
         }
 
-        private void OnReceiveDownStream(IAsyncResult ar)
+        private void OnReceiveDownstream(IAsyncResult ar)
         {
             TcpConnectionState state = (TcpConnectionState)ar.AsyncState;
 
@@ -137,7 +150,9 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                     return;
                 }
 
-                state.UpStreamSocket.BeginSend(state.DownStreamBuffer, 0, received, SocketFlags.None, new AsyncCallback(OnSendUpStream), state);
+                this.proxyStats.IncrementDownstreamReceived(received);
+
+                state.UpStreamSocket.BeginSend(state.DownStreamBuffer, 0, received, SocketFlags.None, new AsyncCallback(OnSendUpstream), state);
             }
             catch (Exception)
             {
@@ -145,7 +160,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             }
         }
 
-        private void OnSendUpStream(IAsyncResult ar)
+        private void OnSendUpstream(IAsyncResult ar)
         {
             TcpConnectionState state = (TcpConnectionState)ar.AsyncState;
 
@@ -153,7 +168,9 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             {
                 int sent = state.UpStreamSocket.EndSend(ar);
 
-                state.DownStreamSocket.BeginReceive(state.DownStreamBuffer, 0, state.DownStreamBuffer.Length, SocketFlags.None, new AsyncCallback(OnReceiveDownStream), state);
+                this.proxyStats.IncrementUpstreamSent(sent);
+
+                state.DownStreamSocket.BeginReceive(state.DownStreamBuffer, 0, state.DownStreamBuffer.Length, SocketFlags.None, new AsyncCallback(OnReceiveDownstream), state);
             }
             catch (Exception)
             {
@@ -161,7 +178,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             }
         }
 
-        private void OnReceiveUpStream(IAsyncResult ar)
+        private void OnReceiveUpstream(IAsyncResult ar)
         {
             TcpConnectionState state = (TcpConnectionState)ar.AsyncState;
 
@@ -174,7 +191,9 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                     return;
                 }
 
-                state.DownStreamSocket.BeginSend(state.UpStreamBuffer, 0, received, SocketFlags.None, new AsyncCallback(OnSendDownStream), state);
+                this.proxyStats.IncrementUpstreamReceived(received);
+
+                state.DownStreamSocket.BeginSend(state.UpStreamBuffer, 0, received, SocketFlags.None, new AsyncCallback(OnSendDownstream), state);
             }
             catch (Exception)
             {
@@ -182,7 +201,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             }
         }
 
-        private void OnSendDownStream(IAsyncResult ar)
+        private void OnSendDownstream(IAsyncResult ar)
         {
             TcpConnectionState state = (TcpConnectionState)ar.AsyncState;
 
@@ -190,7 +209,9 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             {
                 int sent = state.DownStreamSocket.EndSend(ar);
 
-                state.UpStreamSocket.BeginReceive(state.UpStreamBuffer, 0, state.UpStreamBuffer.Length, SocketFlags.None, new AsyncCallback(OnReceiveUpStream), state);
+                this.proxyStats.IncrementDownstreamSent(sent);
+
+                state.UpStreamSocket.BeginReceive(state.UpStreamBuffer, 0, state.UpStreamBuffer.Length, SocketFlags.None, new AsyncCallback(OnReceiveUpstream), state);
             }
             catch (Exception)
             {
@@ -206,7 +227,9 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             {
                 state.Target.DecrementConnections();
 
-                this.logger.LogDebug($"Closed connection: Client [{state.UpStreamEndPoint}] <-> Proxy [{this.ip}:{this.port}] <-> Target [{state.DownStreamEndPoint}]");
+                this.proxyStats.DecrementActiveConnections();
+
+                this.logger.LogDebug($"Closed connection: Client [{state.UpStreamEndPoint}] <-> Cuber Proxy [{this.ip}:{this.port}] <-> Target [{state.DownStreamEndPoint}]");
             }
         }
     }
