@@ -10,15 +10,13 @@ namespace Zixoan.Cuber.Server.Probe
 {
     public class HttpHealthProbe : IHealthProbe
     {
-        private const int DefaultTimeout = 5000;
-
         private readonly CuberOptions cuberOptions;
         private readonly HttpClient httpClient;
 
         public HttpHealthProbe(IOptions<CuberOptions> options)
         {
             this.cuberOptions = options.Value;
-            TimeSpan timeout = TimeSpan.FromMilliseconds(this.cuberOptions.HealthProbe?.Timeout ?? DefaultTimeout);
+            TimeSpan timeout = TimeSpan.FromMilliseconds((int)this.cuberOptions.HealthProbe?.Timeout);
             this.httpClient = new HttpClient { Timeout = timeout };
         }
 

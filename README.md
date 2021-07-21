@@ -72,6 +72,11 @@ Descriptions and default values for the 'Cuber' section can be found below:
 | Urls | ["http://localhost:50001"] | A string json array specifying the urls the REST API will be listening on |
 | ApiKeyHeaderName | "X-Api-Key" | The request header name in which the api key is. |
 | ApiKey | "changeme" | The API key to authenticate request against the REST API. |
+| Type | "tcp" | The health probe protocol to use ('tcp' or 'http'). |
+| Port | port of the backend server | The port to use for health probe requests. |
+| Path | "/" | The path to request when using 'http' as health probe. |
+| Timeout | 5000 | The connect/request timeout in milliseconds. |
+| Interval | 5000 | The interval in milliseconds at which the health probes are executed. |
 
 Example config file with all possible values:
 
@@ -95,6 +100,13 @@ Example config file with all possible values:
             "Urls": ["http://localhost:50001"],
             "ApiKeyHeaderName": "X-Api-Key",
             "ApiKey": "changeme"
+        },
+        "HealthProbe": {
+            "Type": "http",
+            "Port": 8080,
+            "Path": "/health",
+            "Timeout": 2000,
+            "Interval": 10000
         }
     },
     "Logging": {

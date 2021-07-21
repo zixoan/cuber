@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Options;
@@ -13,20 +14,24 @@ namespace Zixoan.Cuber.Server.Probe
         private readonly CuberOptions cuberOptions;
 
         public TcpHealthProbe(IOptions<CuberOptions> options)
-        {
-            this.cuberOptions = options.Value;
-        }
+            => this.cuberOptions = options.Value;
 
         public async Task<bool> IsReachable(Target target)
         {
             try
             {
+                CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(this.cuberOptions.HealthProbe.Timeout);
+
                 using TcpClient tcpClient = new TcpClient();
-                await tcpClient.ConnectAsync(target.Ip, this.cuberOptions.HealthProbe?.Port ?? target.Port);
+                await tcpClient.ConnectAsync(target.Ip, this.cuberOptions.HealthProbe?.Port ?? target.Port, cancellationTokenSource.Token);
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception exception) when (
+                exception is SocketException ||
+                exception is ArgumentException ||
+                exception is ObjectDisposedException ||
+                exception is TaskCanceledException)
             {
                 return false;
             }

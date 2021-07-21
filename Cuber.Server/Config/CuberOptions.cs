@@ -30,8 +30,9 @@ namespace Zixoan.Cuber.Server.Config
     {
         public HealthProbeType? Type {get; set; }
         public ushort? Port { get; set; }
-        public string? Path { get; set; }
-        public int? Timeout { get; set; }
+        public string Path { get; set; } = "/";
+        public int Timeout { get; set; } = 5000;
+        public int Interval { get; set; } = 5000;
     }
 
     public enum Mode

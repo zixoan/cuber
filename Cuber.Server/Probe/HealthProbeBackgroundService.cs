@@ -66,7 +66,7 @@ namespace Zixoan.Cuber.Server.Probe
                     }
                 }
 
-                await Task.Delay(5000, cancellationToken);
+                await Task.Delay(this.cuberOptions.HealthProbe.Interval, cancellationToken);
             }
         }
     }
