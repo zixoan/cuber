@@ -16,7 +16,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
         private readonly ILogger logger;
         private readonly CuberOptions cuberOptions;
 
-        private Socket socket;
+        private Socket? socket;
         private bool running;
 
         private string ip;
@@ -75,10 +75,11 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             {
                 Socket socket = this.socket.EndAccept(ar);
 
-                Target target = this.loadBalanceStrategy.GetTarget(socket.RemoteEndPoint);
+                Target? target = this.loadBalanceStrategy.GetTarget(socket.RemoteEndPoint);
                 if (target == null)
                 {
-                    this.logger.LogError($"Closed connection: Client [{socket.RemoteEndPoint}] because no target was available");
+                    this.logger.LogError(
+                        $"Closed connection: Client [{socket.RemoteEndPoint}] because no target was available");
                     socket.Close();
                     return;
                 }
@@ -91,7 +92,8 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                     DownStreamBuffer = new byte[this.cuberOptions.DownStreamBufferSize],
                     Target = target
                 };
-                state.DownStreamSocket.BeginConnect(target.Ip, target.Port, new AsyncCallback(OnDownstreamConnect), state);
+                state.DownStreamSocket.BeginConnect(target.Ip, target.Port, new AsyncCallback(OnDownstreamConnect),
+                    state);
 
                 this.socket.BeginAccept(new AsyncCallback(OnAccept), null);
             }
@@ -105,7 +107,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
         private void OnDownstreamConnect(IAsyncResult ar)
         {
-            TcpConnectionState state = (TcpConnectionState)ar.AsyncState;
+            TcpConnectionState state = (TcpConnectionState)ar.AsyncState!;
 
             try
             {
@@ -139,7 +141,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
         private void OnReceiveDownstream(IAsyncResult ar)
         {
-            TcpConnectionState state = (TcpConnectionState)ar.AsyncState;
+            TcpConnectionState state = (TcpConnectionState)ar.AsyncState!;
 
             try
             {
@@ -162,7 +164,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
         private void OnSendUpstream(IAsyncResult ar)
         {
-            TcpConnectionState state = (TcpConnectionState)ar.AsyncState;
+            TcpConnectionState state = (TcpConnectionState)ar.AsyncState!;
 
             try
             {
@@ -180,7 +182,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
         private void OnReceiveUpstream(IAsyncResult ar)
         {
-            TcpConnectionState state = (TcpConnectionState)ar.AsyncState;
+            TcpConnectionState state = (TcpConnectionState)ar.AsyncState!;
 
             try
             {
@@ -203,7 +205,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
         private void OnSendDownstream(IAsyncResult ar)
         {
-            TcpConnectionState state = (TcpConnectionState)ar.AsyncState;
+            TcpConnectionState state = (TcpConnectionState)ar.AsyncState!;
 
             try
             {

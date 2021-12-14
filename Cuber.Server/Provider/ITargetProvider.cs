@@ -14,6 +14,6 @@ namespace Zixoan.Cuber.Server.Provider
 
         void Add(Target target);
         void Remove(int index);
-        Target Aggregate(Func<Target, Target, Target> accumulator);
+        Target? Aggregate(Func<Target, Target, Target> accumulator);
     }
 }

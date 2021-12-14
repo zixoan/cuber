@@ -98,7 +98,7 @@ namespace Zixoan.Cuber.Server.Probe
             }
         }
 
-        public Target Aggregate(Func<Target, Target, Target> accumulator)
+        public Target? Aggregate(Func<Target, Target, Target> accumulator)
         {
             this.readWriteLock.EnterReadLock();
 

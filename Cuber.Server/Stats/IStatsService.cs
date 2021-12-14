@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 
-#nullable enable
 namespace Zixoan.Cuber.Server.Stats
 {
     public interface IStatsService
@@ -11,4 +10,3 @@ namespace Zixoan.Cuber.Server.Stats
         void Remove(string key);
     }
 }
-#nullable disable

@@ -8,8 +8,14 @@ namespace Zixoan.Cuber.Server.Config
         private int connections;
 
         public string Ip { get; set; }
-        public int Port { get; set; }
+        public ushort Port { get; set; }
         public int Connections => this.connections;
+
+        public Target(string ip, ushort port)
+        {
+            this.Ip = ip;
+            this.Port = port;
+        }
 
         public void IncrementConnections()
             => Interlocked.Increment(ref this.connections);
@@ -17,7 +23,7 @@ namespace Zixoan.Cuber.Server.Config
         public void DecrementConnections()
             => Interlocked.Decrement(ref this.connections);
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (!(obj is Target target))
             {

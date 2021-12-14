@@ -1,18 +1,17 @@
 ﻿using System.Collections.Generic;
 
-#nullable enable
 namespace Zixoan.Cuber.Server.Config
 {
     public class CuberOptions
     {
         private const int DefaultBufferSize = 8192;
 
-        public string? Ip { get; set; }
+        public string Ip { get; set; } = "127.0.0.1";
         public ushort Port { get; set; }
         public int Backlog { get; set; }
         public Mode Mode { get; set; }
         public BalanceStrategy BalanceStrategy { get; set; }
-        public List<Target>? Targets { get; set; }
+        public List<Target> Targets { get; set; } = new List<Target>();
         public HealthProbe? HealthProbe { get; set; }
         public int UpStreamBufferSize { get; set; } = DefaultBufferSize;
         public int DownStreamBufferSize { get; set; } = DefaultBufferSize;
@@ -48,4 +47,3 @@ namespace Zixoan.Cuber.Server.Config
         Http
     }
 }
-#nullable disable

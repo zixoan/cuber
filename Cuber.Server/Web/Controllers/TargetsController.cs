@@ -28,7 +28,7 @@ namespace Zixoan.Cuber.Server.Web.Controllers
             => this.targetProvider.Targets.Where(target => target.Ip == ip);
 
         [HttpGet("{ip}/{port}")]
-        public Target GetTarget(string ip, ushort port)
+        public Target? GetTarget(string ip, ushort port)
             => this.targetProvider.Targets.FirstOrDefault(target => target.Ip == ip && target.Port == port);
 
         [HttpPost]
@@ -39,11 +39,7 @@ namespace Zixoan.Cuber.Server.Web.Controllers
                 return this.BadRequest(new { Message = $"Target with IP {targetDto.Ip} and port {targetDto.Port} already exists" });
             }
 
-            Target target = new Target
-            {
-                Ip = targetDto.Ip,
-                Port = targetDto.Port
-            };
+            Target target = new Target(targetDto.Ip, targetDto.Port);
             this.targetProvider.Add(target);
 
             return this.Ok();
@@ -52,10 +48,10 @@ namespace Zixoan.Cuber.Server.Web.Controllers
         [HttpDelete("{ip}/{port}")]
         public IActionResult DeleteTarget(string ip, ushort port)
         {
-            Target target = this.targetProvider.Targets.FirstOrDefault(target => target.Ip == ip && target.Port == port);
+            Target? target = this.targetProvider.Targets.FirstOrDefault(target => target.Ip == ip && target.Port == port);
             if (target == null)
             {
-                return this.NotFound(new { Message = $"Target with IP {target.Ip} and port {target.Port} does not exist" });
+                return this.NotFound(new { Message = $"Target with IP {ip} and port {port} does not exist" });
             }
 
             this.targetProvider.Remove(this.targetProvider.Targets.IndexOf(target));

@@ -9,7 +9,7 @@ public class NullStatsService : IStatsService
 
     }
 
-    public ProxyStats Get(string key)
+    public ProxyStats? Get(string key)
     {
         return null;
     }

@@ -14,6 +14,6 @@ namespace Zixoan.Cuber.Server.Balancing
             this.targetProvider = targetProvider;
         }
 
-        public abstract Target GetTarget(EndPoint sourceEndPoint);
+        public abstract Target? GetTarget(EndPoint? sourceEndPoint);
     }
 }

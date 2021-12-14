@@ -15,7 +15,7 @@ namespace Zixoan.Cuber.Server.Balancing
 
         }
 
-        public override Target GetTarget(EndPoint sourceEndPoint)
+        public override Target? GetTarget(EndPoint? sourceEndPoint)
         {
             int targetCount = this.targetProvider.Count;
             if (targetCount == 0)

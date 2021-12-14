@@ -13,7 +13,7 @@ namespace Zixoan.Cuber.Server.Tests
 {
     public class HealthProbeTests
     {
-        private readonly IOptions<CuberOptions> CuberOptions = Options.Create(new CuberOptions { HealthProbe = new HealthProbe() });
+        private readonly IOptions<CuberOptions> CuberOptions = Options.Create(new CuberOptions {});
 
         [Fact]
         public async Task TcpHealthProbeSuccessful()
@@ -23,7 +23,7 @@ namespace Zixoan.Cuber.Server.Tests
             TcpListener tcpListener = new TcpListener(IPAddress.Loopback, 0);
             tcpListener.Start();
 
-            Target target = new Target { Ip = IPAddress.Loopback.ToString(), Port = ((IPEndPoint)tcpListener.LocalEndpoint).Port };
+            Target target = new Target(IPAddress.Loopback.ToString(), (ushort)((IPEndPoint)tcpListener.LocalEndpoint).Port);
 
             Task<bool> reachableTask = tcpProbe.IsReachable(target);
 
@@ -38,7 +38,7 @@ namespace Zixoan.Cuber.Server.Tests
         {
             IHealthProbe tcpProbe = new TcpHealthProbe(CuberOptions);
 
-            Target target = new Target { Ip = IPAddress.Loopback.ToString(), Port = 0 };
+            Target target = new Target(IPAddress.Loopback.ToString(), 0);
 
             Assert.False(await tcpProbe.IsReachable(target));
         }
@@ -48,13 +48,13 @@ namespace Zixoan.Cuber.Server.Tests
         {
             IHealthProbe httpProbe = new HttpHealthProbe(CuberOptions);
 
-            int port = PortHelper.GetFreePort();
+            ushort port = PortHelper.GetFreePort();
 
             HttpListener httpListener = new HttpListener();
             httpListener.Prefixes.Add($"http://127.0.0.1:{port}/");
             httpListener.Start();
 
-            Target target = new Target { Ip = IPAddress.Loopback.ToString(), Port = port };
+            Target target = new Target(IPAddress.Loopback.ToString(), port);
 
             Task<bool> reachableTask = httpProbe.IsReachable(target);
 
@@ -70,7 +70,7 @@ namespace Zixoan.Cuber.Server.Tests
         {
             IHealthProbe httpProbe = new HttpHealthProbe(CuberOptions);
 
-            Target target = new Target { Ip = IPAddress.Loopback.ToString(), Port = 0 };
+            Target target = new Target(IPAddress.Loopback.ToString(), 0);
 
             Assert.False(await httpProbe.IsReachable(target));
         }

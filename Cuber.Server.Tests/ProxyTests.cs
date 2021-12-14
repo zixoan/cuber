@@ -34,11 +34,7 @@ namespace Zixoan.Cuber.Server.Tests
 
             List<Target> targets = new List<Target>
             {
-                new Target
-                {
-                    Ip = IPAddress.Loopback.ToString(), 
-                    Port = ((IPEndPoint)targetServer.LocalEndpoint).Port 
-                }
+                new Target(IPAddress.Loopback.ToString(), (ushort)((IPEndPoint)targetServer.LocalEndpoint).Port)
             };
             ITargetProvider targetProvider = new SimpleTargetProvider(targets);
 
@@ -97,11 +93,7 @@ namespace Zixoan.Cuber.Server.Tests
 
             List<Target> targets = new List<Target>
             {
-                new Target
-                {
-                    Ip = IPAddress.Loopback.ToString(), 
-                    Port = ((IPEndPoint)targetServer.Client.LocalEndPoint).Port 
-                }
+                new Target(IPAddress.Loopback.ToString(), (ushort)((IPEndPoint)targetServer.Client.LocalEndPoint).Port)
             };
             ITargetProvider targetProvider = new SimpleTargetProvider(targets);
 

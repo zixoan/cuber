@@ -13,11 +13,11 @@ namespace Zixoan.Cuber.Server.Tests
     public class LoadBalanceStrategyTests
     {
         private static readonly List<Target> Targets = new List<Target>
-            {
-                new Target { Ip = "10.0.0.1", Port = 8080 },
-                new Target { Ip = "10.0.0.2", Port = 8081 },
-                new Target { Ip = "10.0.0.3", Port = 8082 }
-            };
+        {
+            new Target("10.0.0.1", 8080),
+            new Target("10.0.0.2", 8081),
+            new Target("10.0.0.3", 8082)
+        };
 
         private static readonly ITargetProvider TargetProvider = new SimpleTargetProvider(Targets);
 
