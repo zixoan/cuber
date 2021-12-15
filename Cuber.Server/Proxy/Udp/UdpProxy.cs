@@ -128,7 +128,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
                         DownStreamEndPoint = downStreamEndPoint,
                         DownStreamReceiveBuffer = new byte[this.cuberOptions.DownStreamBufferSize]
                     };
-                    udpConnectionState.DownStreamSocket.Bind(new IPEndPoint((((IPEndPoint)this.socket.LocalEndPoint!)!).Address, 0));
+                    udpConnectionState.DownStreamSocket.Connect(downStreamEndPoint);
 
                     this.clients.Add(upStreamEndpoint, udpConnectionState);
 
