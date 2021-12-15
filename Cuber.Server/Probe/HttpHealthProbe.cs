@@ -1,5 +1,6 @@
 using System;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Options;
@@ -20,7 +21,7 @@ namespace Zixoan.Cuber.Server.Probe
             this.httpClient = new HttpClient { Timeout = timeout };
         }
 
-        public async Task<bool> IsReachable(Target target)
+        public async Task<bool> IsReachableAsync(Target target, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -31,7 +32,7 @@ namespace Zixoan.Cuber.Server.Probe
                     this.cuberOptions.HealthProbe?.Path
                 );
 
-                HttpResponseMessage response = await httpClient.GetAsync(uriBuilder.Uri);
+                HttpResponseMessage response = await httpClient.GetAsync(uriBuilder.Uri, cancellationToken);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception exception) when (exception is ArgumentException or HttpRequestException)

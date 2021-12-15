@@ -31,7 +31,7 @@ namespace Zixoan.Cuber.Server.Tests
 
             var target = new Target(IPAddress.Loopback.ToString(), (ushort)((IPEndPoint)tcpListener.LocalEndpoint).Port);
 
-            Task<bool> reachableTask = tcpProbe.IsReachable(target);
+            Task<bool> reachableTask = tcpProbe.IsReachableAsync(target);
 
             Socket client = await tcpListener.AcceptSocketAsync();
             client.Close();
@@ -46,7 +46,7 @@ namespace Zixoan.Cuber.Server.Tests
 
             var target = new Target(IPAddress.Loopback.ToString(), 0);
 
-            Assert.False(await tcpProbe.IsReachable(target));
+            Assert.False(await tcpProbe.IsReachableAsync(target));
         }
 
         [Fact]
@@ -62,7 +62,7 @@ namespace Zixoan.Cuber.Server.Tests
 
             var target = new Target(IPAddress.Loopback.ToString(), port);
 
-            Task<bool> reachableTask = httpProbe.IsReachable(target);
+            Task<bool> reachableTask = httpProbe.IsReachableAsync(target);
 
             HttpListenerContext client = await httpListener.GetContextAsync();
             client.Response.StatusCode = (int)HttpStatusCode.OK;
@@ -78,7 +78,7 @@ namespace Zixoan.Cuber.Server.Tests
 
             var target = new Target(IPAddress.Loopback.ToString(), 0);
 
-            Assert.False(await httpProbe.IsReachable(target));
+            Assert.False(await httpProbe.IsReachableAsync(target));
         }
     }
 }

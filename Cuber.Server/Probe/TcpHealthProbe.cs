@@ -16,14 +16,18 @@ namespace Zixoan.Cuber.Server.Probe
         public TcpHealthProbe(IOptions<CuberOptions> options)
             => this.cuberOptions = options.Value;
 
-        public async Task<bool> IsReachable(Target target)
+        public async Task<bool> IsReachableAsync(Target target, CancellationToken cancellationToken = default)
         {
             try
             {
-                var cancellationTokenSource = new CancellationTokenSource(this.cuberOptions.HealthProbe!.Timeout);
-
+                using var timeoutCancellationTokenSource = new CancellationTokenSource(this.cuberOptions.HealthProbe!.Timeout);
+                using var linkedCancellationTokenSource =
+                    CancellationTokenSource.CreateLinkedTokenSource(timeoutCancellationTokenSource.Token,
+                        cancellationToken);
+                
                 using var tcpClient = new TcpClient();
-                await tcpClient.ConnectAsync(target.Ip, this.cuberOptions.HealthProbe?.Port ?? target.Port, cancellationTokenSource.Token);
+                await tcpClient.ConnectAsync(target.Ip, this.cuberOptions.HealthProbe?.Port ?? target.Port,
+                    linkedCancellationTokenSource.Token);
 
                 return true;
             }

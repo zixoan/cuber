@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,7 +16,7 @@ namespace Zixoan.Cuber.Server.Probe
         private readonly ILogger<HealthProbeBackgroundService> logger;
         private readonly ITargetProvider targetProvider;
         private readonly IHealthProbe healthProbe;
-        private readonly CuberOptions cuberOptions;
+        private readonly IOptions<CuberOptions> cuberOptions;
         private readonly IList<Target> offlineTargets;
 
         public HealthProbeBackgroundService(
@@ -29,13 +28,13 @@ namespace Zixoan.Cuber.Server.Probe
             this.logger = logger;
             this.targetProvider = targetProvider;
             this.healthProbe = healthProbe;
-            this.cuberOptions = cuberOptions.Value;
+            this.cuberOptions = cuberOptions;
             this.offlineTargets = new List<Target>();
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
         {
-            this.logger.LogInformation($"Starting {this.cuberOptions.HealthProbe?.Type} health probe");
+            this.logger.LogInformation("Starting {type} health probe", this.cuberOptions.Value.HealthProbe!.Type);
             return base.StartAsync(cancellationToken);
         }
 
@@ -49,7 +48,7 @@ namespace Zixoan.Cuber.Server.Probe
                 {
                     Target target = targets[i];
 
-                    bool reachable = await this.healthProbe.IsReachable(target);
+                    bool reachable = await this.healthProbe.IsReachableAsync(target, cancellationToken);
                     if (!reachable && !this.offlineTargets.Contains(target))
                     {
                         this.targetProvider.Remove(i);
@@ -66,7 +65,7 @@ namespace Zixoan.Cuber.Server.Probe
                     }
                 }
 
-                await Task.Delay(this.cuberOptions.HealthProbe.Interval, cancellationToken);
+                await Task.Delay(this.cuberOptions.Value.HealthProbe!.Interval, cancellationToken);
             }
         }
     }
