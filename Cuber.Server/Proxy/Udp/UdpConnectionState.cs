@@ -20,7 +20,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
             }
         }
         public Socket DownStreamSocket { get; set; }
-        public Target Target { get; set; }
+        public Target? Target { get; set; }
         public EndPoint UpStreamEndPoint { get; set; }
         public byte[] DownStreamReceiveBuffer { get; set; }
         public EndPoint DownStreamEndPoint { get; set; }

@@ -2,7 +2,7 @@
 {
     public interface IProxy
     {
-        void Start(string ip, ushort port);
+        void Start();
         void Stop();
     }
 }

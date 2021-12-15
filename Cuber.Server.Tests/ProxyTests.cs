@@ -29,17 +29,17 @@ namespace Zixoan.Cuber.Server.Tests
             byte[] expectedBufferClient = Encoding.UTF8.GetBytes("Hello, client!");
             byte[] actualBuffer = new byte[expectedBufferTarget.Length];
 
-            TcpListener targetServer = new TcpListener(IPAddress.Loopback, 0);
+            var targetServer = new TcpListener(IPAddress.Loopback, 0);
             targetServer.Start();
 
-            List<Target> targets = new List<Target>
+            var targets = new List<Target>
             {
-                new Target(IPAddress.Loopback.ToString(), (ushort)((IPEndPoint)targetServer.LocalEndpoint).Port)
+                new(IPAddress.Loopback.ToString(), (ushort)((IPEndPoint)targetServer.LocalEndpoint).Port)
             };
             ITargetProvider targetProvider = new SimpleTargetProvider(targets);
 
-            IProxy tcpProxy = new TcpProxy(new NullLogger<TcpProxy>(), Options.Create(new CuberOptions()), new NullStatsService(), new RoundRobinLoadBalanceStrategy(targetProvider));
-            tcpProxy.Start(IPAddress.Loopback.ToString(), proxyServerPort);
+            IProxy tcpProxy = new TcpProxy(new NullLogger<TcpProxy>(), Options.Create(new CuberOptions { Ip = IPAddress.Loopback.ToString(), Port = proxyServerPort}), new NullStatsService(), new RoundRobinLoadBalanceStrategy(targetProvider));
+            tcpProxy.Start();
 
             Assert.Equal(0, targets[0].Connections);
 
@@ -49,7 +49,7 @@ namespace Zixoan.Cuber.Server.Tests
 
             // Connect client to tcp proxy, 
             // which will then connect to the target server
-            using (TcpClient tcpClient = new TcpClient())
+            using (var tcpClient = new TcpClient())
             {
                 tcpClient.Connect(IPAddress.Loopback, proxyServerPort);
 
@@ -89,18 +89,18 @@ namespace Zixoan.Cuber.Server.Tests
             byte[] expectedBufferTarget = Encoding.UTF8.GetBytes("Hello, target!");
             byte[] expectedBufferClient = Encoding.UTF8.GetBytes("Hello, client!");
 
-            UdpClient targetServer = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
+            var targetServer = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
 
-            List<Target> targets = new List<Target>
+            var targets = new List<Target>
             {
-                new Target(IPAddress.Loopback.ToString(), (ushort)((IPEndPoint)targetServer.Client.LocalEndPoint).Port)
+                new(IPAddress.Loopback.ToString(), (ushort)(((IPEndPoint)targetServer.Client.LocalEndPoint!)!).Port)
             };
             ITargetProvider targetProvider = new SimpleTargetProvider(targets);
 
-            IProxy udpProxy = new UdpProxy(new NullLogger<UdpProxy>(), Options.Create(new CuberOptions()), new NullStatsService(), new RoundRobinLoadBalanceStrategy(targetProvider));
-            udpProxy.Start(IPAddress.Loopback.ToString(), proxyServerPort);
+            IProxy udpProxy = new UdpProxy(new NullLogger<UdpProxy>(), Options.Create(new CuberOptions { Ip = IPAddress.Loopback.ToString(), Port = proxyServerPort }), new NullStatsService(), new RoundRobinLoadBalanceStrategy(targetProvider));
+            udpProxy.Start();
 
-            using (UdpClient udpClient = new UdpClient())
+            using (var udpClient = new UdpClient())
             {
                 udpClient.Connect(IPAddress.Loopback, proxyServerPort);
                 

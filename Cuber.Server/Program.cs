@@ -23,7 +23,7 @@ namespace Zixoan.Cuber.Server
                 .AddCommandLine(args)
                 .Build();
 
-            CuberOptions cuberOptions = new CuberOptions();
+            var cuberOptions = new CuberOptions();
             configuration.GetSection("Cuber").Bind(cuberOptions);
 
             IHostBuilder hostBuilder = CreateConsoleHostBuilder(configuration, cuberOptions.Web.Urls);

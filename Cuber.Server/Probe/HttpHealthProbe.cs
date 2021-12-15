@@ -16,7 +16,7 @@ namespace Zixoan.Cuber.Server.Probe
         public HttpHealthProbe(IOptions<CuberOptions> options)
         {
             this.cuberOptions = options.Value;
-            TimeSpan timeout = TimeSpan.FromMilliseconds((int)this.cuberOptions.HealthProbe?.Timeout);
+            TimeSpan timeout = TimeSpan.FromMilliseconds(this.cuberOptions.HealthProbe!.Timeout);
             this.httpClient = new HttpClient { Timeout = timeout };
         }
 
@@ -24,7 +24,7 @@ namespace Zixoan.Cuber.Server.Probe
         {
             try
             {
-                UriBuilder uriBuilder = new UriBuilder(
+                var uriBuilder = new UriBuilder(
                     "http",
                     target.Ip,
                     this.cuberOptions.HealthProbe?.Port ?? target.Port,
@@ -32,10 +32,9 @@ namespace Zixoan.Cuber.Server.Probe
                 );
 
                 HttpResponseMessage response = await httpClient.GetAsync(uriBuilder.Uri);
-
                 return response.IsSuccessStatusCode;
             }
-            catch (Exception exception) when (exception is ArgumentException || exception is HttpRequestException)
+            catch (Exception exception) when (exception is ArgumentException or HttpRequestException)
             {
                 return false;
             }

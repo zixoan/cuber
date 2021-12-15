@@ -5,7 +5,7 @@ namespace Zixoan.Cuber.Server.Stats
 {
     public class ProxyStats
     {
-        private long startUnixSeconds;
+        private readonly long startUnixSeconds;
 
         public ProxyStats(long startUnixSeconds)
             => this.startUnixSeconds = startUnixSeconds;

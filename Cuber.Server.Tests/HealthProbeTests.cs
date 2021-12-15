@@ -13,17 +13,23 @@ namespace Zixoan.Cuber.Server.Tests
 {
     public class HealthProbeTests
     {
-        private readonly IOptions<CuberOptions> CuberOptions = Options.Create(new CuberOptions {});
+        private readonly IOptions<CuberOptions> cuberOptions = Options.Create(new CuberOptions
+        {
+            HealthProbe = new HealthProbe
+            {
+                Timeout = 2000
+            }
+        });
 
         [Fact]
         public async Task TcpHealthProbeSuccessful()
         {
-            IHealthProbe tcpProbe = new TcpHealthProbe(CuberOptions);
+            IHealthProbe tcpProbe = new TcpHealthProbe(this.cuberOptions);
 
-            TcpListener tcpListener = new TcpListener(IPAddress.Loopback, 0);
+            var tcpListener = new TcpListener(IPAddress.Loopback, 0);
             tcpListener.Start();
 
-            Target target = new Target(IPAddress.Loopback.ToString(), (ushort)((IPEndPoint)tcpListener.LocalEndpoint).Port);
+            var target = new Target(IPAddress.Loopback.ToString(), (ushort)((IPEndPoint)tcpListener.LocalEndpoint).Port);
 
             Task<bool> reachableTask = tcpProbe.IsReachable(target);
 
@@ -36,9 +42,9 @@ namespace Zixoan.Cuber.Server.Tests
         [Fact]
         public async Task TcpHealthProbeUnsuccessful()
         {
-            IHealthProbe tcpProbe = new TcpHealthProbe(CuberOptions);
+            IHealthProbe tcpProbe = new TcpHealthProbe(this.cuberOptions);
 
-            Target target = new Target(IPAddress.Loopback.ToString(), 0);
+            var target = new Target(IPAddress.Loopback.ToString(), 0);
 
             Assert.False(await tcpProbe.IsReachable(target));
         }
@@ -46,15 +52,15 @@ namespace Zixoan.Cuber.Server.Tests
         [Fact]
         public async Task HttpHealthProbeSuccessful()
         {
-            IHealthProbe httpProbe = new HttpHealthProbe(CuberOptions);
+            IHealthProbe httpProbe = new HttpHealthProbe(this.cuberOptions);
 
             ushort port = PortHelper.GetFreePort();
 
-            HttpListener httpListener = new HttpListener();
+            var httpListener = new HttpListener();
             httpListener.Prefixes.Add($"http://127.0.0.1:{port}/");
             httpListener.Start();
 
-            Target target = new Target(IPAddress.Loopback.ToString(), port);
+            var target = new Target(IPAddress.Loopback.ToString(), port);
 
             Task<bool> reachableTask = httpProbe.IsReachable(target);
 
@@ -68,9 +74,9 @@ namespace Zixoan.Cuber.Server.Tests
         [Fact]
         public async Task HttpHealthProbeUnsuccessful()
         {
-            IHealthProbe httpProbe = new HttpHealthProbe(CuberOptions);
+            IHealthProbe httpProbe = new HttpHealthProbe(this.cuberOptions);
 
-            Target target = new Target(IPAddress.Loopback.ToString(), 0);
+            var target = new Target(IPAddress.Loopback.ToString(), 0);
 
             Assert.False(await httpProbe.IsReachable(target));
         }

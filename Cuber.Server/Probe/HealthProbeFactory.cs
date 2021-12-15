@@ -6,21 +6,17 @@ using Zixoan.Cuber.Server.Config;
 
 namespace Zixoan.Cuber.Server.Probe
 {
-    public class HealthProbeFactory
+    public static class HealthProbeFactory
     {
-        public static IHealthProbe Create(HealthProbeType type, CuberOptions cuberOptions)
+        public static IHealthProbe Create(HealthProbeType type, IOptions<CuberOptions> cuberOptions)
         {
-            IOptions<CuberOptions> options = Options.Create(cuberOptions);
-
-            switch (type)
+            return type switch
             {
-                case HealthProbeType.Tcp:
-                    return new TcpHealthProbe(options);
-                case HealthProbeType.Http:
-                    return new HttpHealthProbe(options);
-                default:
-                    throw new ArgumentException($"Unknown health probe type, only tcp and http are currently supported");
-            }
+                HealthProbeType.Tcp => new TcpHealthProbe(cuberOptions),
+                HealthProbeType.Http => new HttpHealthProbe(cuberOptions),
+                _ => throw new ArgumentException(
+                    "Unknown health probe type, only tcp and http are currently supported")
+            };
         }
     }
 }

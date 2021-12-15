@@ -4,18 +4,17 @@ using System.Linq;
 using System.Threading;
 
 using Zixoan.Cuber.Server.Config;
-using Zixoan.Cuber.Server.Provider;
 
-namespace Zixoan.Cuber.Server.Probe
+namespace Zixoan.Cuber.Server.Provider
 {
     public class ThreadSafeTargetProvider : ITargetProvider
     {
         private readonly IList<Target> targets;
         private readonly ReaderWriterLockSlim readWriteLock;
 
-        public ThreadSafeTargetProvider(IList<Target> targets)
+        public ThreadSafeTargetProvider(IEnumerable<Target> targets)
         {
-            this.targets = targets ?? new List<Target>();
+            this.targets = new List<Target>(targets);
             this.readWriteLock = new ReaderWriterLockSlim();
         }
 
@@ -104,12 +103,9 @@ namespace Zixoan.Cuber.Server.Probe
 
             try
             {
-                if (this.targets.Count == 0)
-                {
-                    return null;
-                }
-
-                return this.targets.Aggregate(accumulator);
+                return this.targets.Count == 0 
+                    ? null
+                    : this.targets.Aggregate(accumulator);
             }
             finally
             {

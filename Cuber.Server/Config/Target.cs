@@ -11,6 +11,11 @@ namespace Zixoan.Cuber.Server.Config
         public ushort Port { get; set; }
         public int Connections => this.connections;
 
+        public Target()
+        {
+            
+        }
+        
         public Target(string ip, ushort port)
         {
             this.Ip = ip;
@@ -25,18 +30,18 @@ namespace Zixoan.Cuber.Server.Config
 
         public override bool Equals(object? obj)
         {
-            if (!(obj is Target target))
+            if (obj is not Target target)
             {
                 return false;
             }
-
-            return Ip == target.Ip &&
-                   Port == target.Port;
+        
+            return this.Ip == target.Ip &&
+                   this.Port == target.Port;
         }
-
+        
         public override int GetHashCode()
-            => HashCode.Combine(Ip, Port);
-
+            => HashCode.Combine(this.Ip, this.Port);
+        
         public override string ToString()
             => $"{this.Ip}:{this.Port}";
     }

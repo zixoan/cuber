@@ -3,7 +3,7 @@ using Zixoan.Cuber.Server.Provider;
 
 namespace Zixoan.Cuber.Server.Balancing
 {
-    public class LoadBalanceStrategyFactory
+    public static class LoadBalanceStrategyFactory
     {
         public static ILoadBalanceStrategy Create(BalanceStrategy balanceStrategy, ITargetProvider targetProvider)
         {

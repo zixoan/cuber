@@ -17,12 +17,9 @@ namespace Zixoan.Cuber.Server.Balancing
         public override Target? GetTarget(EndPoint? sourceEndPoint)
         {
             int count = this.targetProvider.Count;
-            if (count == 0)
-            {
-                return null;
-            }
-
-            return this.targetProvider[currentTarget++ % count];
+            return count == 0
+                ? null
+                : this.targetProvider[this.currentTarget++ % count];
         }
     }
 }

@@ -12,7 +12,7 @@ using Zixoan.Cuber.Server.Provider;
 
 namespace Zixoan.Cuber.Server.Probe
 {
-    public class HealthProbeBackgroundService : BackgroundService, IDisposable
+    public class HealthProbeBackgroundService : BackgroundService
     {
         private readonly ILogger<HealthProbeBackgroundService> logger;
         private readonly ITargetProvider targetProvider;
@@ -55,14 +55,14 @@ namespace Zixoan.Cuber.Server.Probe
                         this.targetProvider.Remove(i);
                         this.offlineTargets.Add(target);
 
-                        logger.LogWarning("Target {0} went offline", target);
+                        logger.LogWarning("Target {target} went offline", target);
                     }
                     else if (reachable && this.offlineTargets.Contains(target))
                     {
                         this.targetProvider.Add(target);
                         this.offlineTargets.Remove(target);
 
-                        logger.LogInformation("Target {0} went online", target);
+                        logger.LogInformation("Target {target} went online", target);
                     }
                 }
 

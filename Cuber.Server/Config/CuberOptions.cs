@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Zixoan.Cuber.Server.Config
 {
@@ -11,16 +12,16 @@ namespace Zixoan.Cuber.Server.Config
         public int Backlog { get; set; }
         public Mode Mode { get; set; }
         public BalanceStrategy BalanceStrategy { get; set; }
-        public List<Target> Targets { get; set; } = new List<Target>();
+        public IEnumerable<Target>? Targets { get; set; }
         public HealthProbe? HealthProbe { get; set; }
         public int UpStreamBufferSize { get; set; } = DefaultBufferSize;
         public int DownStreamBufferSize { get; set; } = DefaultBufferSize;
-        public Web Web { get; set; } = new Web();
+        public Web Web { get; set; } = new();
     }
 
     public class Web
     {
-        public string[] Urls { get; set; } = new[] { "http://localhost:50001/" };
+        public string[] Urls { get; set; } = { "http://localhost:50001/" };
         public string ApiKeyHeaderName { get; set; } = "X-Api-Key";
         public string ApiKey { get; set; } = "changeme";
     }

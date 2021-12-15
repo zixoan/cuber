@@ -23,15 +23,15 @@ namespace Zixoan.Cuber.Server.Balancing
                 return null;
             }
 
-            if (sourceEndPoint is IPEndPoint ipEndPoint)
+            if (sourceEndPoint is not IPEndPoint ipEndPoint)
             {
-                int sourceIpHashCode = ipEndPoint.Address.GetHashCode();
-                int targetIndex = sourceIpHashCode.FloorMod(targetCount);
-
-                return this.targetProvider[targetIndex];
+                throw new NotSupportedException("sourceEndPoint needs to be an IPEndPoint");
             }
 
-            throw new NotSupportedException("sourceEndPoint needs to be an IPEndPoint");
+            int sourceIpHashCode = ipEndPoint.Address.GetHashCode();
+            int targetIndex = sourceIpHashCode.FloorMod(targetCount);
+
+            return this.targetProvider[targetIndex];
         }
     }
 }

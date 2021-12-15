@@ -1,9 +1,8 @@
-using Microsoft.Extensions.Configuration;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 using Zixoan.Cuber.Server.Config;
-using Zixoan.Cuber.Server.Probe;
 using Zixoan.Cuber.Server.Provider;
 
 namespace Zixoan.Cuber.Server.Extensions
@@ -14,9 +13,8 @@ namespace Zixoan.Cuber.Server.Extensions
         {
             @this.AddSingleton<ITargetProvider, ThreadSafeTargetProvider>(serviceProvider =>
             {
-                IConfiguration configuration = serviceProvider.GetRequiredService<IConfiguration>();
                 IOptions<CuberOptions> options = serviceProvider.GetRequiredService<IOptions<CuberOptions>>();
-                return new ThreadSafeTargetProvider(options.Value.Targets); 
+                return new ThreadSafeTargetProvider((options.Value.Targets ?? Enumerable.Empty<Target>())); 
             });
             return @this;
         }

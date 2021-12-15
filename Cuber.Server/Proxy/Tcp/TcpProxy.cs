@@ -15,15 +15,15 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
     {
         private readonly ILogger logger;
         private readonly CuberOptions cuberOptions;
+        private readonly IStatsService statsService;
+        private readonly Socket socket;
 
-        private Socket? socket;
         private bool running;
 
-        private string ip;
-        private ushort port;
+        private readonly string ip;
+        private readonly ushort port;
 
-        private IStatsService statsService;
-        private ProxyStats proxyStats;
+        private readonly ProxyStats proxyStats;
 
         public TcpProxy(
             ILogger<TcpProxy> logger,
@@ -35,23 +35,22 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             this.logger = logger;
             this.cuberOptions = options.Value;
             this.statsService = statsService;
+            this.proxyStats = new ProxyStats(DateTimeOffset.Now.ToUnixTimeSeconds());
+            this.statsService.Add("tcp", this.proxyStats);
+            this.socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            this.ip = this.cuberOptions.Ip;
+            this.port = this.cuberOptions.Port;
         }
 
-        public override void Start(string ip, ushort port)
+        public override void Start()
         {
-            this.ip = ip;
-            this.port = port;
-            this.socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             this.socket.Bind(new IPEndPoint(IPAddress.Parse(this.ip), this.port));
             this.socket.Listen(this.cuberOptions.Backlog);
             this.running = true;
 
-            this.proxyStats = new ProxyStats(DateTimeOffset.Now.ToUnixTimeSeconds());
-            this.statsService.Add("tcp", this.proxyStats);
+            this.logger.LogInformation("Tcp proxy listening on {ip}:{port}", this.ip, this.port);
 
-            this.logger.LogInformation($"Tcp proxy listening on {this.ip}:{this.port}");
-
-            this.socket.BeginAccept(new AsyncCallback(OnAccept), null);
+            this.socket.BeginAccept(this.OnAccept, null);
         }
 
         public override void Stop()
@@ -73,29 +72,28 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
         {
             try
             {
-                Socket socket = this.socket.EndAccept(ar);
+                Socket acceptedSocket = this.socket.EndAccept(ar);
 
-                Target? target = this.loadBalanceStrategy.GetTarget(socket.RemoteEndPoint);
+                Target? target = this.loadBalanceStrategy.GetTarget(acceptedSocket.RemoteEndPoint);
                 if (target == null)
                 {
                     this.logger.LogError(
-                        $"Closed connection: Client [{socket.RemoteEndPoint}] because no target was available");
-                    socket.Close();
+                        "Closed connection: Client [{remoteEndPoint}] because no target was available", acceptedSocket.RemoteEndPoint);
+                    acceptedSocket.Close();
                     return;
                 }
 
-                TcpConnectionState state = new TcpConnectionState()
+                var state = new TcpConnectionState()
                 {
-                    UpStreamSocket = socket,
+                    UpStreamSocket = acceptedSocket,
                     DownStreamSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp),
                     UpStreamBuffer = new byte[this.cuberOptions.UpStreamBufferSize],
                     DownStreamBuffer = new byte[this.cuberOptions.DownStreamBufferSize],
                     Target = target
                 };
-                state.DownStreamSocket.BeginConnect(target.Ip, target.Port, new AsyncCallback(OnDownstreamConnect),
-                    state);
+                state.DownStreamSocket.BeginConnect(target.Ip, target.Port, this.OnDownstreamConnect, state);
 
-                this.socket.BeginAccept(new AsyncCallback(OnAccept), null);
+                this.socket.BeginAccept(this.OnAccept, null);
             }
             catch (Exception exception)
             {
@@ -118,15 +116,20 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                     state.Connected = true;
                     state.Target.IncrementConnections();
 
-                    state.UpStreamEndPoint = state.UpStreamSocket.RemoteEndPoint.ToString();
-                    state.DownStreamEndPoint = state.DownStreamSocket.RemoteEndPoint.ToString();
+                    state.UpStreamEndPoint = state.UpStreamSocket.RemoteEndPoint!.ToString()!;
+                    state.DownStreamEndPoint = state.DownStreamSocket.RemoteEndPoint!.ToString()!;
 
                     this.proxyStats.IncrementActiveConnections();
 
-                    this.logger.LogDebug($"New connection: Client [{state.UpStreamEndPoint}] <-> Cuber Proxy [{this.ip}:{this.port}] <-> Target [{state.DownStreamEndPoint}]");
+                    this.logger.LogDebug(
+                        "New connection: Client [{state.UpStreamEndPoint}] <-> Cuber Proxy [{this.ip}:{this.port}] <-> Target [{state.DownStreamEndPoint}]",
+                        state.UpStreamEndPoint,
+                        this.ip,
+                        this.port,
+                        state.DownStreamEndPoint);
 
-                    state.UpStreamSocket.BeginReceive(state.UpStreamBuffer, 0, state.UpStreamBuffer.Length, SocketFlags.None, new AsyncCallback(OnReceiveUpstream), state);
-                    state.DownStreamSocket.BeginReceive(state.DownStreamBuffer, 0, state.DownStreamBuffer.Length, SocketFlags.None, new AsyncCallback(OnReceiveDownstream), state);
+                    state.UpStreamSocket.BeginReceive(state.UpStreamBuffer, 0, state.UpStreamBuffer.Length, SocketFlags.None, this.OnReceiveUpstream, state);
+                    state.DownStreamSocket.BeginReceive(state.DownStreamBuffer, 0, state.DownStreamBuffer.Length, SocketFlags.None, this.OnReceiveDownstream, state);
                 }
                 else
                 {
@@ -154,7 +157,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
                 this.proxyStats.IncrementDownstreamReceived(received);
 
-                state.UpStreamSocket.BeginSend(state.DownStreamBuffer, 0, received, SocketFlags.None, new AsyncCallback(OnSendUpstream), state);
+                state.UpStreamSocket.BeginSend(state.DownStreamBuffer, 0, received, SocketFlags.None, this.OnSendUpstream, state);
             }
             catch (Exception)
             {
@@ -172,7 +175,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
                 this.proxyStats.IncrementUpstreamSent(sent);
 
-                state.DownStreamSocket.BeginReceive(state.DownStreamBuffer, 0, state.DownStreamBuffer.Length, SocketFlags.None, new AsyncCallback(OnReceiveDownstream), state);
+                state.DownStreamSocket.BeginReceive(state.DownStreamBuffer, 0, state.DownStreamBuffer.Length, SocketFlags.None, this.OnReceiveDownstream, state);
             }
             catch (Exception)
             {
@@ -195,7 +198,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
                 this.proxyStats.IncrementUpstreamReceived(received);
 
-                state.DownStreamSocket.BeginSend(state.UpStreamBuffer, 0, received, SocketFlags.None, new AsyncCallback(OnSendDownstream), state);
+                state.DownStreamSocket.BeginSend(state.UpStreamBuffer, 0, received, SocketFlags.None, this.OnSendDownstream, state);
             }
             catch (Exception)
             {
@@ -213,7 +216,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
                 this.proxyStats.IncrementDownstreamSent(sent);
 
-                state.UpStreamSocket.BeginReceive(state.UpStreamBuffer, 0, state.UpStreamBuffer.Length, SocketFlags.None, new AsyncCallback(OnReceiveUpstream), state);
+                state.UpStreamSocket.BeginReceive(state.UpStreamBuffer, 0, state.UpStreamBuffer.Length, SocketFlags.None, this.OnReceiveUpstream, state);
             }
             catch (Exception)
             {
@@ -224,15 +227,16 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
         private void Close(TcpConnectionState state)
         {
             bool wasConnected = state.Connected;
-
-            if (state.Close() && wasConnected)
+            if (!state.Close() || !wasConnected)
             {
-                state.Target.DecrementConnections();
-
-                this.proxyStats.DecrementActiveConnections();
-
-                this.logger.LogDebug($"Closed connection: Client [{state.UpStreamEndPoint}] <-> Cuber Proxy [{this.ip}:{this.port}] <-> Target [{state.DownStreamEndPoint}]");
+                return;
             }
+
+            state.Target.DecrementConnections();
+            this.proxyStats.DecrementActiveConnections();
+            this.logger.LogDebug(
+                "Closed connection: Client [{upStreamEndPoint}] <-> Cuber Proxy [{ip}:{port}] <-> Target [{downStreamEndPoint}]",
+                state.UpStreamEndPoint, this.ip, this.port, state.DownStreamEndPoint);
         }
     }
 }

@@ -21,14 +21,14 @@ namespace Zixoan.Cuber.Server.Proxy.Multi
             this.proxies = proxies;
         }
 
-        public override void Start(string ip, ushort port)
+        public override void Start()
         {
             foreach (IProxy proxy in this.proxies)
             {
-                proxy.Start(ip, port);
+                proxy.Start();
             }
 
-            this.logger.LogInformation($"Multi proxy started");
+            this.logger.LogInformation("Multi proxy started");
         }
 
         public override void Stop()

@@ -10,9 +10,7 @@ namespace Zixoan.Cuber.Server.Balancing
         protected readonly ITargetProvider targetProvider;
 
         protected LoadBalanceStrategyBase(ITargetProvider targetProvider)
-        {
-            this.targetProvider = targetProvider;
-        }
+            => this.targetProvider = targetProvider;
 
         public abstract Target? GetTarget(EndPoint? sourceEndPoint);
     }

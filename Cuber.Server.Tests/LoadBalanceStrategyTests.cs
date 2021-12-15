@@ -12,7 +12,7 @@ namespace Zixoan.Cuber.Server.Tests
 {
     public class LoadBalanceStrategyTests
     {
-        private static readonly List<Target> Targets = new List<Target>
+        private static readonly List<Target> Targets = new()
         {
             new Target("10.0.0.1", 8080),
             new Target("10.0.0.2", 8081),

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using Zixoan.Cuber.Server.Config;
 using Zixoan.Cuber.Server.Provider;
 
@@ -17,14 +18,10 @@ namespace Zixoan.Cuber.Server.Tests
         public IList<Target> Targets => this.targets;
 
         public SimpleTargetProvider(IList<Target> targets)
-        {
-            this.targets = targets;
-        }
+            => this.targets = targets;
 
         public void Add(Target target)
-        {
-            this.targets.Add(target);
-        }
+            => this.targets.Add(target);
 
         public Target Aggregate(Func<Target, Target, Target> accumulator)
             => this.targets.Aggregate(accumulator);

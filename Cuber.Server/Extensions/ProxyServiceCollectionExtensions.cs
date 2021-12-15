@@ -32,8 +32,8 @@ namespace Zixoan.Cuber.Server.Extensions
                         return new UdpProxy(loggerFactory.CreateLogger<UdpProxy>(), options, statsService, loadBalanceStrategy);
                     case Mode.Multi:
                     {
-                        TcpProxy tcpProxy = new TcpProxy(loggerFactory.CreateLogger<TcpProxy>(), options, statsService, loadBalanceStrategy);
-                        UdpProxy udpProxy = new UdpProxy(loggerFactory.CreateLogger<UdpProxy>(), options, statsService, loadBalanceStrategy);
+                        var tcpProxy = new TcpProxy(loggerFactory.CreateLogger<TcpProxy>(), options, statsService, loadBalanceStrategy);
+                        var udpProxy = new UdpProxy(loggerFactory.CreateLogger<UdpProxy>(), options, statsService, loadBalanceStrategy);
                         return new MultiProxy(loggerFactory.CreateLogger<MultiProxy>(), new List<IProxy> { tcpProxy, udpProxy }, loadBalanceStrategy);
                     }
                     default:

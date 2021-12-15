@@ -20,19 +20,19 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
 
         private readonly ILogger logger;
         private readonly CuberOptions cuberOptions;
-        private readonly EndPoint AnyEndPoint = new IPEndPoint(IPAddress.Any, 0);
+        private readonly EndPoint anyEndPoint = new IPEndPoint(IPAddress.Any, 0);
 
-        private Socket socket;
+        private readonly Socket socket;
         private bool running;
-        private string ip;
-        private ushort port;
-        private byte[] upStreamReceiveBuffer;
+        private readonly string ip;
+        private readonly ushort port;
+        private readonly byte[] upStreamReceiveBuffer;
 
-        private Timer inactiveTimer;
-        private IDictionary<EndPoint, UdpConnectionState> clients = new ConcurrentDictionary<EndPoint, UdpConnectionState>();
+        private Timer? inactiveTimer;
+        private readonly IDictionary<EndPoint, UdpConnectionState> clients = new ConcurrentDictionary<EndPoint, UdpConnectionState>();
 
         private readonly IStatsService statsService;
-        private ProxyStats udpStats;
+        private readonly ProxyStats udpStats;
 
         public UdpProxy(
             ILogger<UdpProxy> logger,
@@ -44,26 +44,25 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
             this.logger = logger;
             this.cuberOptions = options.Value;
             this.statsService = statsService;
+            this.socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            this.udpStats = new ProxyStats(DateTimeOffset.Now.ToUnixTimeSeconds());
+            this.statsService.Add("udp", this.udpStats);
+            this.upStreamReceiveBuffer = new byte[this.cuberOptions.UpStreamBufferSize];
+            this.ip = this.cuberOptions.Ip;
+            this.port = this.cuberOptions.Port;
         }
 
-        public override void Start(string ip, ushort port)
+        public override void Start()
         {
-            this.ip = ip;
-            this.port = port;
-            this.upStreamReceiveBuffer = new byte[this.cuberOptions.UpStreamBufferSize];
-            this.socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             this.socket.Bind(new IPEndPoint(IPAddress.Parse(this.ip), this.port));
             this.running = true;
 
-            this.udpStats = new ProxyStats(DateTimeOffset.Now.ToUnixTimeSeconds());
-            this.statsService.Add("udp", this.udpStats);
-
             this.inactiveTimer = new Timer(OnInactiveTimerTick, null, 5000, 5000);
 
-            EndPoint endPoint = AnyEndPoint;
-            this.socket.BeginReceiveFrom(this.upStreamReceiveBuffer, 0, this.upStreamReceiveBuffer.Length, SocketFlags.None, ref endPoint, new AsyncCallback(OnReceiveFromUpstream), null);
+            EndPoint endPoint = this.anyEndPoint;
+            this.socket.BeginReceiveFrom(this.upStreamReceiveBuffer, 0, this.upStreamReceiveBuffer.Length, SocketFlags.None, ref endPoint, this.OnReceiveFromUpstream, null);
 
-            this.logger.LogInformation($"Udp proxy listening on {this.ip}:{this.port}");
+            this.logger.LogInformation("Udp proxy listening on {ip}:{port}", this.ip, this.port);
         }
 
         public override void Stop()
@@ -81,8 +80,11 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
 
             this.socket.Close();
 
-            this.inactiveTimer.Change(Timeout.Infinite, Timeout.Infinite);
-            this.inactiveTimer.Dispose();
+            if (this.inactiveTimer != null)
+            {
+                this.inactiveTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                this.inactiveTimer.Dispose();
+            }
 
             this.running = false;
 
@@ -95,30 +97,30 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
         {
             try
             {
-                EndPoint upStreamEndpoint = AnyEndPoint;
+                EndPoint upStreamEndpoint = this.anyEndPoint;
                 int received = this.socket.EndReceiveFrom(ar, ref upStreamEndpoint);
 
                 this.udpStats.IncrementUpstreamReceived(received);
 
-                if (this.clients.TryGetValue(upStreamEndpoint, out UdpConnectionState state))
+                if (this.clients.TryGetValue(upStreamEndpoint, out UdpConnectionState? state))
                 {
-                    state.DownStreamSocket.BeginSendTo(this.upStreamReceiveBuffer, 0, received, SocketFlags.None, state.DownStreamEndPoint, new AsyncCallback(OnSendToDownstream), state);
+                    state.DownStreamSocket.BeginSendTo(this.upStreamReceiveBuffer, 0, received, SocketFlags.None, state.DownStreamEndPoint, this.OnSendToDownstream, state);
                     EndPoint targetEndPoint = state.DownStreamEndPoint;
-                    state.DownStreamSocket.BeginReceiveFrom(state.DownStreamReceiveBuffer, 0, state.DownStreamReceiveBuffer.Length, SocketFlags.None, ref targetEndPoint, new AsyncCallback(OnReceiveFromDownstream), state);
+                    state.DownStreamSocket.BeginReceiveFrom(state.DownStreamReceiveBuffer, 0, state.DownStreamReceiveBuffer.Length, SocketFlags.None, ref targetEndPoint, this.OnReceiveFromDownstream, state);
 
                     state.LastActivity = DateTime.Now.Ticks;
                 }
                 else
                 {
-                    Target target = this.loadBalanceStrategy.GetTarget(upStreamEndpoint);
+                    Target? target = this.loadBalanceStrategy.GetTarget(upStreamEndpoint);
                     if (target == null)
                     {
-                        this.logger.LogError($"Closed connection: Client [{upStreamEndpoint}] because no target was available");
+                        this.logger.LogError("Closed connection: Client [{upStreamEndpoint}] because no target was available", upStreamEndpoint);
                         return;
                     }
 
                     EndPoint downStreamEndPoint = new IPEndPoint(IPAddress.Parse(target.Ip), target.Port);
-                    UdpConnectionState udpConnectionState = new UdpConnectionState
+                    var udpConnectionState = new UdpConnectionState
                     {
                         DownStreamSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp),
                         Target = target,
@@ -126,22 +128,24 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
                         DownStreamEndPoint = downStreamEndPoint,
                         DownStreamReceiveBuffer = new byte[this.cuberOptions.DownStreamBufferSize]
                     };
-                    udpConnectionState.DownStreamSocket.Bind(new IPEndPoint(((IPEndPoint)this.socket.LocalEndPoint).Address, 0));
+                    udpConnectionState.DownStreamSocket.Bind(new IPEndPoint((((IPEndPoint)this.socket.LocalEndPoint!)!).Address, 0));
 
                     this.clients.Add(upStreamEndpoint, udpConnectionState);
 
-                    udpConnectionState.DownStreamSocket.BeginSendTo(this.upStreamReceiveBuffer, 0, received, SocketFlags.None, udpConnectionState.DownStreamEndPoint, new AsyncCallback(OnSendToDownstream), udpConnectionState);
-                    udpConnectionState.DownStreamSocket.BeginReceiveFrom(udpConnectionState.DownStreamReceiveBuffer, 0, udpConnectionState.DownStreamReceiveBuffer.Length, SocketFlags.None, ref downStreamEndPoint, new AsyncCallback(OnReceiveFromDownstream), udpConnectionState);
-
+                    udpConnectionState.DownStreamSocket.BeginSendTo(this.upStreamReceiveBuffer, 0, received, SocketFlags.None, udpConnectionState.DownStreamEndPoint, this.OnSendToDownstream, udpConnectionState);
+                    udpConnectionState.DownStreamSocket.BeginReceiveFrom(udpConnectionState.DownStreamReceiveBuffer, 0, udpConnectionState.DownStreamReceiveBuffer.Length, SocketFlags.None, ref downStreamEndPoint, this.OnReceiveFromDownstream, udpConnectionState);
+                    
                     target.IncrementConnections();
-
+                    
                     this.udpStats.IncrementActiveConnections();
-
-                    this.logger.LogDebug($"New connection: Client [{upStreamEndpoint}] <-> Cuber Proxy [{this.ip}:{this.port}] <-> Target [{downStreamEndPoint}]");
+                    
+                    this.logger.LogDebug(
+                        "New connection: Client [{upStreamEndpoint}] <-> Cuber Proxy [{ip}:{port}] <-> Target [{downStreamEndPoint}]",
+                        upStreamEndpoint, this.ip, this.port, downStreamEndPoint);
                 }
 
-                EndPoint endPoint = AnyEndPoint;
-                this.socket.BeginReceiveFrom(this.upStreamReceiveBuffer, 0, this.upStreamReceiveBuffer.Length, SocketFlags.None, ref endPoint, new AsyncCallback(OnReceiveFromUpstream), null);
+                EndPoint endPoint = this.anyEndPoint;
+                this.socket.BeginReceiveFrom(this.upStreamReceiveBuffer, 0, this.upStreamReceiveBuffer.Length, SocketFlags.None, ref endPoint, this.OnReceiveFromUpstream, null);
             }
             catch (Exception e)
             {
@@ -153,7 +157,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
 
         private void OnSendToDownstream(IAsyncResult ar)
         {
-            UdpConnectionState state = (UdpConnectionState)ar.AsyncState;
+            UdpConnectionState state = (UdpConnectionState)ar.AsyncState!;
 
             try
             {
@@ -169,7 +173,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
 
         private void OnReceiveFromDownstream(IAsyncResult ar)
         {
-            UdpConnectionState state = (UdpConnectionState)ar.AsyncState;
+            UdpConnectionState state = (UdpConnectionState)ar.AsyncState!;
 
             try
             {
@@ -178,7 +182,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
 
                 this.udpStats.IncrementDownstreamReceived(received);
 
-                this.socket.BeginSendTo(state.DownStreamReceiveBuffer, 0, received, SocketFlags.None, state.UpStreamEndPoint, new AsyncCallback(OnSendToUpstream), state);
+                this.socket.BeginSendTo(state.DownStreamReceiveBuffer, 0, received, SocketFlags.None, state.UpStreamEndPoint, this.OnSendToUpstream, state);
 
                 state.LastActivity = DateTime.Now.Ticks;
             }
@@ -190,7 +194,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
 
         private void OnSendToUpstream(IAsyncResult ar)
         {
-            UdpConnectionState state = (UdpConnectionState)ar.AsyncState;
+            UdpConnectionState state = (UdpConnectionState)ar.AsyncState!;
 
             try
             {
@@ -204,16 +208,16 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
             }
         }
 
-        private void OnInactiveTimerTick(object state)
+        private void OnInactiveTimerTick(object? state)
         {
-            foreach (KeyValuePair<EndPoint, UdpConnectionState> pair in this.clients)
+            foreach (var (endPoint, udpConnectionState) in this.clients)
             {
                 // TODO: Configurable inactive/timeout milliseconds for idle UDP "connections"
-                if (DateTime.Now.Ticks - pair.Value.LastActivity >= DefaultInactiveTicks)
+                if (DateTime.Now.Ticks - udpConnectionState.LastActivity >= DefaultInactiveTicks)
                 {
-                    this.Close(pair.Value);
+                    this.Close(udpConnectionState);
 
-                    this.clients.Remove(pair.Key);
+                    this.clients.Remove(endPoint);
                 }
             }
         }
@@ -224,11 +228,13 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
 
             if (state.Stop() && wasConnected)
             {
-                state.Target.DecrementConnections();
+                state.Target!.DecrementConnections();
 
                 this.udpStats.DecrementActiveConnections();
 
-                this.logger.LogDebug($"Closed connection: Client [{state.UpStreamEndPoint}] <-> Cuber Proxy [{this.ip}:{this.port}] <-> Target [{state.DownStreamEndPoint}]");
+                this.logger.LogDebug(
+                    "Closed connection: Client [{upStreamEndPoint}] <-> Cuber Proxy [{ip}:{port}] <-> Target [{downStreamEndPoint}]",
+                    state.UpStreamEndPoint, this.ip, this.port, state.DownStreamEndPoint);
             }
         }
     }

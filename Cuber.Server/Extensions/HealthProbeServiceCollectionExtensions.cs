@@ -14,18 +14,20 @@ namespace Zixoan.Cuber.Server.Extensions
         {
             ServiceProvider serviceProvider = @this.BuildServiceProvider();
 
-            IOptions<CuberOptions> options = serviceProvider.GetRequiredService<IOptions<CuberOptions>>();
-            if (options.Value.HealthProbe != null)
+            IOptions<CuberOptions> cuberOptions = serviceProvider.GetRequiredService<IOptions<CuberOptions>>();
+            if (cuberOptions.Value.HealthProbe == null)
             {
-                HealthProbeType? type = options.Value.HealthProbe.Type;
-                if (type == null)
-                {
-                    throw new ArgumentException("At least Type must be defined when HealthProbe is defined in config");
-                }
-
-                @this.AddSingleton<IHealthProbe>(serviceProvider => HealthProbeFactory.Create(type.Value, options.Value));
-                @this.AddHostedService<HealthProbeBackgroundService>();
+                return @this;
             }
+
+            HealthProbeType? type = cuberOptions.Value.HealthProbe.Type;
+            if (type == null)
+            {
+                throw new ArgumentException("At least Type must be defined when HealthProbe is defined in config");
+            }
+
+            @this.AddSingleton(_ => HealthProbeFactory.Create(type.Value, cuberOptions));
+            @this.AddHostedService<HealthProbeBackgroundService>();
             return @this;
         }
     }

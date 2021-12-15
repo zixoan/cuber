@@ -20,18 +20,15 @@ namespace Zixoan.Cuber.Server.Probe
         {
             try
             {
-                CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(this.cuberOptions.HealthProbe.Timeout);
+                var cancellationTokenSource = new CancellationTokenSource(this.cuberOptions.HealthProbe!.Timeout);
 
-                using TcpClient tcpClient = new TcpClient();
+                using var tcpClient = new TcpClient();
                 await tcpClient.ConnectAsync(target.Ip, this.cuberOptions.HealthProbe?.Port ?? target.Port, cancellationTokenSource.Token);
 
                 return true;
             }
             catch (Exception exception) when (
-                exception is SocketException ||
-                exception is ArgumentException ||
-                exception is ObjectDisposedException ||
-                exception is TaskCanceledException)
+                exception is SocketException or ArgumentException or ObjectDisposedException or TaskCanceledException)
             {
                 return false;
             }

@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Hosting;
@@ -29,9 +30,10 @@ namespace Zixoan.Cuber.Server
         public Task StartAsync(CancellationToken cancellationToken)
         {
             this.logger.LogInformation("Starting Cuber server");
-            this.logger.LogInformation($"Using load balance strategy {this.cuberOptions.BalanceStrategy} with {this.cuberOptions.Targets?.Count ?? 0} targets");
+            this.logger.LogInformation("Using load balance strategy {balanceStrategy} with {targetCount} targets",
+                this.cuberOptions.BalanceStrategy, this.cuberOptions.Targets?.Count() ?? 0);
 
-            this.proxy.Start(this.cuberOptions.Ip, this.cuberOptions.Port);
+            this.proxy.Start();
 
             return Task.CompletedTask;
         }
