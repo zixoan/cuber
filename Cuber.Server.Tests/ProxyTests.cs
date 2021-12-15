@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,19 +6,26 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
+using NSubstitute;
+
 using Xunit;
 
 using Zixoan.Cuber.Server.Balancing;
 using Zixoan.Cuber.Server.Config;
-using Zixoan.Cuber.Server.Provider;
 using Zixoan.Cuber.Server.Proxy;
 using Zixoan.Cuber.Server.Proxy.Tcp;
 using Zixoan.Cuber.Server.Proxy.Udp;
+using Zixoan.Cuber.Server.Stats;
 
 namespace Zixoan.Cuber.Server.Tests
 {
     public class ProxyTests
     {
+        private readonly IStatsService statsService;
+
+        public ProxyTests()
+            => this.statsService = Substitute.For<IStatsService>();
+
         [Fact]
         public async Task TcpProxyConnectAndEcho()
         {
@@ -32,16 +38,15 @@ namespace Zixoan.Cuber.Server.Tests
             var targetServer = new TcpListener(IPAddress.Loopback, 0);
             targetServer.Start();
 
-            var targets = new List<Target>
-            {
-                new(IPAddress.Loopback.ToString(), (ushort)((IPEndPoint)targetServer.LocalEndpoint).Port)
-            };
-            ITargetProvider targetProvider = new SimpleTargetProvider(targets);
+            var target = new Target(IPAddress.Loopback.ToString(), (ushort)((IPEndPoint)targetServer.LocalEndpoint).Port);
+            ILoadBalanceStrategy loadBalanceStrategy = Substitute.For<ILoadBalanceStrategy>();
+            loadBalanceStrategy.GetTarget(Arg.Any<IPEndPoint>())
+                .Returns(target);
 
-            IProxy tcpProxy = new TcpProxy(new NullLogger<TcpProxy>(), Options.Create(new CuberOptions { Ip = IPAddress.Loopback.ToString(), Port = proxyServerPort}), new NullStatsService(), new RoundRobinLoadBalanceStrategy(targetProvider));
+            IProxy tcpProxy = new TcpProxy(new NullLogger<TcpProxy>(), Options.Create(new CuberOptions { Ip = IPAddress.Loopback.ToString(), Port = proxyServerPort }), statsService, loadBalanceStrategy);
             tcpProxy.Start();
 
-            Assert.Equal(0, targets[0].Connections);
+            Assert.Equal(0, target.Connections);
 
             // Start async accept of the tcp proxy connection
             // that will happen below
@@ -51,6 +56,8 @@ namespace Zixoan.Cuber.Server.Tests
             // which will then connect to the target server
             using (var tcpClient = new TcpClient())
             {
+                // Connect synchronous so we can await the accept task
+                // after the connect is finished
                 tcpClient.Connect(IPAddress.Loopback, proxyServerPort);
 
                 using Socket acceptedClientOnTarget = await waitingAccept;
@@ -58,7 +65,7 @@ namespace Zixoan.Cuber.Server.Tests
                 // Give the async target connect some time to complete
                 await Task.Delay(25);
 
-                Assert.Equal(1, targets[0].Connections);
+                Assert.Equal(1, target.Connections);
 
                 // Client -> Proxy -> Target
                 await tcpClient.GetStream().WriteAsync(expectedBufferTarget);
@@ -76,7 +83,7 @@ namespace Zixoan.Cuber.Server.Tests
             // Give the proxy connection some time to disconnect properly
             await Task.Delay(25);
 
-            Assert.Equal(0, targets[0].Connections);
+            Assert.Equal(0, target.Connections);
 
             tcpProxy.Stop();
         }
@@ -91,13 +98,12 @@ namespace Zixoan.Cuber.Server.Tests
 
             var targetServer = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
 
-            var targets = new List<Target>
-            {
-                new(IPAddress.Loopback.ToString(), (ushort)(((IPEndPoint)targetServer.Client.LocalEndPoint!)!).Port)
-            };
-            ITargetProvider targetProvider = new SimpleTargetProvider(targets);
-
-            IProxy udpProxy = new UdpProxy(new NullLogger<UdpProxy>(), Options.Create(new CuberOptions { Ip = IPAddress.Loopback.ToString(), Port = proxyServerPort }), new NullStatsService(), new RoundRobinLoadBalanceStrategy(targetProvider));
+            var target = new Target(IPAddress.Loopback.ToString(), (ushort)(((IPEndPoint)targetServer.Client.LocalEndPoint!)!).Port);
+            ILoadBalanceStrategy loadBalanceStrategy = Substitute.For<ILoadBalanceStrategy>();
+            loadBalanceStrategy.GetTarget(Arg.Any<IPEndPoint>())
+                .Returns(target);
+            
+            IProxy udpProxy = new UdpProxy(new NullLogger<UdpProxy>(), Options.Create(new CuberOptions { Ip = IPAddress.Loopback.ToString(), Port = proxyServerPort }), statsService, loadBalanceStrategy);
             udpProxy.Start();
 
             using (var udpClient = new UdpClient())
