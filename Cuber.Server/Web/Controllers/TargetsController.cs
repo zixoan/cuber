@@ -24,11 +24,11 @@ namespace Zixoan.Cuber.Server.Web.Controllers
             => this.targetProvider.Targets;
 
         [HttpGet("{ip}")]
-        public IEnumerable<Target> GetTargets(string ip)
+        public IEnumerable<Target> Get(string ip)
             => this.targetProvider.Targets.Where(target => target.Ip == ip);
 
         [HttpGet("{ip}/{port}")]
-        public Target? GetTarget(string ip, ushort port)
+        public Target? Get(string ip, ushort port)
             => this.targetProvider.Targets.FirstOrDefault(target => target.Ip == ip && target.Port == port);
 
         [HttpPost]
@@ -46,7 +46,7 @@ namespace Zixoan.Cuber.Server.Web.Controllers
         }
 
         [HttpDelete("{ip}/{port}")]
-        public IActionResult DeleteTarget(string ip, ushort port)
+        public IActionResult Delete(string ip, ushort port)
         {
             Target? target = this.targetProvider.Targets.FirstOrDefault(target => target.Ip == ip && target.Port == port);
             if (target == null)

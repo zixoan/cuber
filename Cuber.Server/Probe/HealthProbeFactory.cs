@@ -14,8 +14,7 @@ namespace Zixoan.Cuber.Server.Probe
             {
                 HealthProbeType.Tcp => new TcpHealthProbe(cuberOptions),
                 HealthProbeType.Http => new HttpHealthProbe(cuberOptions),
-                _ => throw new ArgumentException(
-                    "Unknown health probe type, only tcp and http are currently supported")
+                _ => throw new ArgumentException("Unknown health probe type, only tcp and http are currently supported")
             };
         }
     }

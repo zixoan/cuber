@@ -5,41 +5,39 @@ using Zixoan.Cuber.Server.Config;
 
 namespace Zixoan.Cuber.Server.Proxy.Udp
 {
-    public class UdpConnectionState
+    public class UdpConnectionState : ConnectionState
     {
-        private readonly object stateLock = new object();
-
-        public bool Connected
+        public UdpConnectionState(
+            Socket upStreamSocket,
+            Socket downStreamSocket,
+            byte[] upStreamBuffer,
+            byte[] downStreamBuffer,
+            EndPoint upStreamEndPoint,
+            EndPoint downStreamEndPoint,
+            Target target)
+            : base(
+                upStreamSocket,
+                downStreamSocket,
+                upStreamBuffer,
+                downStreamBuffer,
+                upStreamEndPoint,
+                downStreamEndPoint,
+                target)
         {
-            get
-            {
-                lock (this.stateLock)
-                {
-                    return !this.closed;
-                }
-            }
         }
-        public Socket DownStreamSocket { get; set; }
-        public Target? Target { get; set; }
-        public EndPoint UpStreamEndPoint { get; set; }
-        public byte[] DownStreamReceiveBuffer { get; set; }
-        public EndPoint DownStreamEndPoint { get; set; }
 
-        public long LastActivity { get; set; }
-
-        private bool closed;
-
-        public bool Stop()
+        public override bool Close()
         {
             lock (this.stateLock)
             {
-                if (this.closed)
+                if (!this.connected)
                 {
                     return false;
                 }
 
+                this.connected = false;
+
                 this.DownStreamSocket.Close();
-                this.closed = true;
 
                 return true;
             }

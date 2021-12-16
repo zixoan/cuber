@@ -83,15 +83,17 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                     return;
                 }
 
-                var state = new TcpConnectionState()
-                {
-                    UpStreamSocket = acceptedSocket,
-                    DownStreamSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp),
-                    UpStreamBuffer = new byte[this.cuberOptions.UpStreamBufferSize],
-                    DownStreamBuffer = new byte[this.cuberOptions.DownStreamBufferSize],
-                    Target = target
-                };
-                state.DownStreamSocket.BeginConnect(target.Ip, target.Port, this.OnDownstreamConnect, state);
+                EndPoint downStreamEndPoint = new IPEndPoint(IPAddress.Parse(target.Ip), target.Port);
+                var tcpConnectionState = new TcpConnectionState(
+                    acceptedSocket,
+                    new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp),
+                    new byte[this.cuberOptions.UpStreamBufferSize],
+                    new byte[this.cuberOptions.DownStreamBufferSize],
+                    acceptedSocket.RemoteEndPoint!,
+                    downStreamEndPoint,
+                    target
+                );
+                tcpConnectionState.DownStreamSocket.BeginConnect(downStreamEndPoint, this.OnDownstreamConnect, tcpConnectionState);
 
                 this.socket.BeginAccept(this.OnAccept, null);
             }
@@ -105,122 +107,128 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
 
         private void OnDownstreamConnect(IAsyncResult ar)
         {
-            TcpConnectionState state = (TcpConnectionState)ar.AsyncState!;
+            TcpConnectionState connectionState = (TcpConnectionState)ar.AsyncState!;
 
             try
             {
-                state.DownStreamSocket.EndConnect(ar);
+                connectionState.DownStreamSocket.EndConnect(ar);
 
-                if (state.DownStreamSocket.Connected)
+                if (connectionState.DownStreamSocket.Connected)
                 {
-                    state.Connected = true;
-                    state.Target.IncrementConnections();
+                    connectionState.Connected = true;
+                    connectionState.Target.IncrementConnections();
 
-                    state.UpStreamEndPoint = state.UpStreamSocket.RemoteEndPoint!.ToString()!;
-                    state.DownStreamEndPoint = state.DownStreamSocket.RemoteEndPoint!.ToString()!;
+                    connectionState.UpStreamEndPoint = connectionState.UpStreamSocket.RemoteEndPoint!;
+                    connectionState.DownStreamEndPoint = connectionState.DownStreamSocket.RemoteEndPoint!;
 
                     this.proxyStats.IncrementActiveConnections();
 
                     this.logger.LogDebug(
                         "New connection: Client [{state.UpStreamEndPoint}] <-> Cuber Proxy [{this.ip}:{this.port}] <-> Target [{state.DownStreamEndPoint}]",
-                        state.UpStreamEndPoint,
+                        connectionState.UpStreamEndPoint,
                         this.ip,
                         this.port,
-                        state.DownStreamEndPoint);
+                        connectionState.DownStreamEndPoint);
 
-                    state.UpStreamSocket.BeginReceive(state.UpStreamBuffer, 0, state.UpStreamBuffer.Length, SocketFlags.None, this.OnReceiveUpstream, state);
-                    state.DownStreamSocket.BeginReceive(state.DownStreamBuffer, 0, state.DownStreamBuffer.Length, SocketFlags.None, this.OnReceiveDownstream, state);
+                    connectionState.UpStreamSocket.BeginReceive(connectionState.UpStreamBuffer, 0,
+                        connectionState.UpStreamBuffer.Length, SocketFlags.None, this.OnReceiveUpstream, connectionState);
+                    connectionState.DownStreamSocket.BeginReceive(connectionState.DownStreamBuffer, 0,
+                        connectionState.DownStreamBuffer.Length, SocketFlags.None, this.OnReceiveDownstream, connectionState);
                 }
                 else
                 {
-                    this.Close(state);
+                    this.Close(connectionState);
                 }
             }
             catch (Exception)
             {
-                this.Close(state);
+                this.Close(connectionState);
             }
         }
 
         private void OnReceiveDownstream(IAsyncResult ar)
         {
-            TcpConnectionState state = (TcpConnectionState)ar.AsyncState!;
+            TcpConnectionState connectionState = (TcpConnectionState)ar.AsyncState!;
 
             try
             {
-                int received = state.DownStreamSocket.EndReceive(ar);
+                int received = connectionState.DownStreamSocket.EndReceive(ar);
                 if (received == 0)
                 {
-                    this.Close(state);
+                    this.Close(connectionState);
                     return;
                 }
 
                 this.proxyStats.IncrementDownstreamReceived(received);
 
-                state.UpStreamSocket.BeginSend(state.DownStreamBuffer, 0, received, SocketFlags.None, this.OnSendUpstream, state);
+                connectionState.UpStreamSocket.BeginSend(connectionState.DownStreamBuffer, 0, received,
+                    SocketFlags.None, this.OnSendUpstream, connectionState);
             }
             catch (Exception)
             {
-                this.Close(state);
+                this.Close(connectionState);
             }
         }
 
         private void OnSendUpstream(IAsyncResult ar)
         {
-            TcpConnectionState state = (TcpConnectionState)ar.AsyncState!;
+            TcpConnectionState connectionState = (TcpConnectionState)ar.AsyncState!;
 
             try
             {
-                int sent = state.UpStreamSocket.EndSend(ar);
+                int sent = connectionState.UpStreamSocket.EndSend(ar);
 
                 this.proxyStats.IncrementUpstreamSent(sent);
 
-                state.DownStreamSocket.BeginReceive(state.DownStreamBuffer, 0, state.DownStreamBuffer.Length, SocketFlags.None, this.OnReceiveDownstream, state);
+                connectionState.DownStreamSocket.BeginReceive(connectionState.DownStreamBuffer, 0,
+                    connectionState.DownStreamBuffer.Length, SocketFlags.None, this.OnReceiveDownstream, connectionState);
             }
             catch (Exception)
             {
-                this.Close(state);
+                this.Close(connectionState);
             }
         }
 
         private void OnReceiveUpstream(IAsyncResult ar)
         {
-            TcpConnectionState state = (TcpConnectionState)ar.AsyncState!;
+            TcpConnectionState connectionState = (TcpConnectionState)ar.AsyncState!;
 
             try
             {
-                int received = state.UpStreamSocket.EndReceive(ar);
+                int received = connectionState.UpStreamSocket.EndReceive(ar);
                 if (received == 0)
                 {
-                    this.Close(state);
+                    this.Close(connectionState);
                     return;
                 }
 
                 this.proxyStats.IncrementUpstreamReceived(received);
 
-                state.DownStreamSocket.BeginSend(state.UpStreamBuffer, 0, received, SocketFlags.None, this.OnSendDownstream, state);
+                connectionState.DownStreamSocket.BeginSend(connectionState.UpStreamBuffer, 0, received,
+                    SocketFlags.None, this.OnSendDownstream, connectionState);
             }
             catch (Exception)
             {
-                this.Close(state);
+                this.Close(connectionState);
             }
         }
 
         private void OnSendDownstream(IAsyncResult ar)
         {
-            TcpConnectionState state = (TcpConnectionState)ar.AsyncState!;
+            TcpConnectionState connectionState = (TcpConnectionState)ar.AsyncState!;
 
             try
             {
-                int sent = state.DownStreamSocket.EndSend(ar);
+                int sent = connectionState.DownStreamSocket.EndSend(ar);
 
                 this.proxyStats.IncrementDownstreamSent(sent);
 
-                state.UpStreamSocket.BeginReceive(state.UpStreamBuffer, 0, state.UpStreamBuffer.Length, SocketFlags.None, this.OnReceiveUpstream, state);
+                connectionState.UpStreamSocket.BeginReceive(connectionState.UpStreamBuffer, 0,
+                    connectionState.UpStreamBuffer.Length, SocketFlags.None, this.OnReceiveUpstream, connectionState);
             }
             catch (Exception)
             {
-                this.Close(state);
+                this.Close(connectionState);
             }
         }
 

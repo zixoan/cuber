@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-#nullable enable
 namespace Zixoan.Cuber.Server.Stats
 {
     public class StatsService : IStatsService
@@ -21,4 +20,3 @@ namespace Zixoan.Cuber.Server.Stats
             => this.stats.Remove(key);
     }
 }
-#nullable disable

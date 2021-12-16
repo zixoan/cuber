@@ -74,7 +74,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
 
             foreach (var pair in this.clients)
             {
-                pair.Value.Stop();
+                pair.Value.Close();
             }
             this.clients.Clear();
 
@@ -106,7 +106,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
                 {
                     state.DownStreamSocket.BeginSendTo(this.upStreamReceiveBuffer, 0, received, SocketFlags.None, state.DownStreamEndPoint, this.OnSendToDownstream, state);
                     EndPoint targetEndPoint = state.DownStreamEndPoint;
-                    state.DownStreamSocket.BeginReceiveFrom(state.DownStreamReceiveBuffer, 0, state.DownStreamReceiveBuffer.Length, SocketFlags.None, ref targetEndPoint, this.OnReceiveFromDownstream, state);
+                    state.DownStreamSocket.BeginReceiveFrom(state.DownStreamBuffer, 0, state.DownStreamBuffer.Length, SocketFlags.None, ref targetEndPoint, this.OnReceiveFromDownstream, state);
 
                     state.LastActivity = DateTime.Now.Ticks;
                 }
@@ -120,20 +120,23 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
                     }
 
                     EndPoint downStreamEndPoint = new IPEndPoint(IPAddress.Parse(target.Ip), target.Port);
-                    var udpConnectionState = new UdpConnectionState
-                    {
-                        DownStreamSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp),
-                        Target = target,
-                        UpStreamEndPoint = upStreamEndpoint,
-                        DownStreamEndPoint = downStreamEndPoint,
-                        DownStreamReceiveBuffer = new byte[this.cuberOptions.DownStreamBufferSize]
-                    };
+                    var udpConnectionState = new UdpConnectionState(
+                        this.socket,
+                        new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp),
+                        new byte[this.cuberOptions.UpStreamBufferSize],
+                        new byte[this.cuberOptions.DownStreamBufferSize],
+                        upStreamEndpoint,
+                        downStreamEndPoint,
+                        target
+                    );
                     udpConnectionState.DownStreamSocket.Connect(downStreamEndPoint);
+
+                    udpConnectionState.Connected = true;
 
                     this.clients.Add(upStreamEndpoint, udpConnectionState);
 
                     udpConnectionState.DownStreamSocket.BeginSendTo(this.upStreamReceiveBuffer, 0, received, SocketFlags.None, udpConnectionState.DownStreamEndPoint, this.OnSendToDownstream, udpConnectionState);
-                    udpConnectionState.DownStreamSocket.BeginReceiveFrom(udpConnectionState.DownStreamReceiveBuffer, 0, udpConnectionState.DownStreamReceiveBuffer.Length, SocketFlags.None, ref downStreamEndPoint, this.OnReceiveFromDownstream, udpConnectionState);
+                    udpConnectionState.DownStreamSocket.BeginReceiveFrom(udpConnectionState.DownStreamBuffer, 0, udpConnectionState.DownStreamBuffer.Length, SocketFlags.None, ref downStreamEndPoint, this.OnReceiveFromDownstream, udpConnectionState);
                     
                     target.IncrementConnections();
                     
@@ -182,7 +185,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
 
                 this.udpStats.IncrementDownstreamReceived(received);
 
-                this.socket.BeginSendTo(state.DownStreamReceiveBuffer, 0, received, SocketFlags.None, state.UpStreamEndPoint, this.OnSendToUpstream, state);
+                this.socket.BeginSendTo(state.DownStreamBuffer, 0, received, SocketFlags.None, state.UpStreamEndPoint, this.OnSendToUpstream, state);
 
                 state.LastActivity = DateTime.Now.Ticks;
             }
@@ -216,7 +219,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
                 if (DateTime.Now.Ticks - udpConnectionState.LastActivity >= DefaultInactiveTicks)
                 {
                     this.Close(udpConnectionState);
-
+            
                     this.clients.Remove(endPoint);
                 }
             }
@@ -226,7 +229,7 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
         {
             bool wasConnected = state.Connected;
 
-            if (state.Stop() && wasConnected)
+            if (state.Close() && wasConnected)
             {
                 state.Target!.DecrementConnections();
 
