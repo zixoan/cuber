@@ -5,7 +5,7 @@ using Zixoan.Cuber.Server.Config;
 
 namespace Zixoan.Cuber.Server.Proxy.Tcp
 {
-    public class TcpConnectionState : ConnectionState
+    public class TcpConnectionState : ConnectionStateBase
     {
         public TcpConnectionState(
             Socket upStreamSocket,

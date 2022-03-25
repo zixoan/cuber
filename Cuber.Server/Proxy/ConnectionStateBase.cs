@@ -5,22 +5,22 @@ using Zixoan.Cuber.Server.Config;
 
 namespace Zixoan.Cuber.Server.Proxy
 {
-    public abstract class ConnectionState
+    public abstract class ConnectionStateBase
     {
-        protected readonly object stateLock = new object();
+        protected readonly object stateLock = new();
 
         protected bool connected;
 
-        public Socket UpStreamSocket { get; set; }
-        public Socket DownStreamSocket { get; set; }
+        public Socket UpStreamSocket { get; }
+        public Socket DownStreamSocket { get; }
 
-        public byte[] UpStreamBuffer { get; set; }
-        public byte[] DownStreamBuffer { get; set; }
+        public byte[] UpStreamBuffer { get; }
+        public byte[] DownStreamBuffer { get; }
 
-        public EndPoint UpStreamEndPoint { get; set; }
-        public EndPoint DownStreamEndPoint { get; set; }
+        public EndPoint UpStreamEndPoint { get; }
+        public EndPoint DownStreamEndPoint { get; }
 
-        public Target Target { get; set; }
+        public Target Target { get; }
 
         public bool Connected
         {
@@ -42,7 +42,7 @@ namespace Zixoan.Cuber.Server.Proxy
 
         public long LastActivity { get; set; }
 
-        public ConnectionState(
+        protected ConnectionStateBase(
             Socket upStreamSocket,
             Socket downStreamSocket,
             byte[] upStreamBuffer,

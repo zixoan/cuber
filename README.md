@@ -1,4 +1,4 @@
-# cuber - reverse TCP and UDP proxy server
+# cuber - reverse TCP and UDP proxy server written in C# .NET 6
 
 ## Content
 
@@ -64,7 +64,7 @@ Descriptions and default values for the 'Cuber' section can be found below:
 |:---|:---:|---|
 | Ip | "127.0.0.1"  | The IP address where cuber binds to. |
 | Port | 50000 | The port where cuber binds to.  |
-| Mode | "tcp" | In which mode should cuber run ('tcp', 'udp' and 'multi').  |
+| Mode | "tcp" | In which mode should cuber run ('tcp', 'udp' or 'multi').  |
 | BalanceStrategy | "RoundRobin" | Load balancing strategy between backend servers to use. Supported are "RoundRobin", "Random", "LeastConnection" and "Hash". |
 | Targets | [] | A json array with objects defining the backend servers with IP and port. |
 | UpStreamBufferSize | 8192 | Upstream buffer size when receiving data from clients. |

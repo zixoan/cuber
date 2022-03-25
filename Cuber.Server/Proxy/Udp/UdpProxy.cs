@@ -72,9 +72,9 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
                 return;
             }
 
-            foreach (var pair in this.clients)
+            foreach (var (_, udpConnectionState) in this.clients)
             {
-                pair.Value.Close();
+                udpConnectionState.Close();
             }
             this.clients.Clear();
 
@@ -225,13 +225,13 @@ namespace Zixoan.Cuber.Server.Proxy.Udp
             }
         }
 
-        private void Close(UdpConnectionState state)
+        private void Close(ConnectionStateBase state)
         {
             bool wasConnected = state.Connected;
 
             if (state.Close() && wasConnected)
             {
-                state.Target!.DecrementConnections();
+                state.Target.DecrementConnections();
 
                 this.udpStats.DecrementActiveConnections();
 

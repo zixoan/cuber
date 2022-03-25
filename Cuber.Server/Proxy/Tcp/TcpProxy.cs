@@ -118,9 +118,6 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
                     connectionState.Connected = true;
                     connectionState.Target.IncrementConnections();
 
-                    connectionState.UpStreamEndPoint = connectionState.UpStreamSocket.RemoteEndPoint!;
-                    connectionState.DownStreamEndPoint = connectionState.DownStreamSocket.RemoteEndPoint!;
-
                     this.proxyStats.IncrementActiveConnections();
 
                     this.logger.LogDebug(
@@ -232,7 +229,7 @@ namespace Zixoan.Cuber.Server.Proxy.Tcp
             }
         }
 
-        private void Close(TcpConnectionState state)
+        private void Close(ConnectionStateBase state)
         {
             bool wasConnected = state.Connected;
             if (!state.Close() || !wasConnected)

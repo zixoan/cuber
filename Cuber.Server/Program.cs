@@ -36,12 +36,12 @@ namespace Zixoan.Cuber.Server
             string[] urls)
         {
             IHostBuilder hostBuilder = new HostBuilder()
-                .ConfigureAppConfiguration((hostContext, config) =>
+                .ConfigureAppConfiguration((_, config) =>
                 {
                     config.SetBasePath(Directory.GetCurrentDirectory());
                     config.AddConfiguration(configuration);
                 })
-                .ConfigureServices((hostContext, services) =>
+                .ConfigureServices((_, services) =>
                 {
                     services.AddLogging(logBuilder =>
                     {
@@ -49,16 +49,7 @@ namespace Zixoan.Cuber.Server
                             .AddConsole()
                             .AddConfiguration(configuration.GetSection("Logging"));
                     });
-                    services.Configure<CuberOptions>(configuration.GetSection("Cuber"));
-
-                    services
-                        .AddTargetProvider()
-                        .AddLoadBalancing()
-                        .AddHealthProbe()
-                        .AddProxy()
-                        .AddStats();
-
-                    services.AddHostedService<CuberHostedService>();
+                    services.AddCuber(configuration);
                 })
                 .ConfigureWebHost(webConfig =>
                 {

@@ -7,10 +7,11 @@ namespace Zixoan.Cuber.Server.Config
     {
         private int connections;
 
-        public string Ip { get; set; }
-        public ushort Port { get; set; }
+        public string Ip { get; } = null!;
+        public ushort Port { get; }
         public int Connections => this.connections;
 
+        // ReSharper disable once UnusedMember.Global
         public Target()
         {
             
