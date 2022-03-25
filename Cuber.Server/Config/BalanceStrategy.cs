@@ -1,10 +1,9 @@
-﻿namespace Zixoan.Cuber.Server.Config
+﻿namespace Zixoan.Cuber.Server.Config;
+
+public enum BalanceStrategy
 {
-    public enum BalanceStrategy
-    {
-        RoundRobin,
-        Random,
-        LeastConnection,
-        Hash
-    }
+    RoundRobin,
+    Random,
+    LeastConnection,
+    Hash
 }

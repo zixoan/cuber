@@ -3,45 +3,44 @@ using System.Net.Sockets;
 
 using Zixoan.Cuber.Server.Config;
 
-namespace Zixoan.Cuber.Server.Proxy.Tcp
+namespace Zixoan.Cuber.Server.Proxy.Tcp;
+
+public class TcpConnectionState : ConnectionStateBase
 {
-    public class TcpConnectionState : ConnectionStateBase
+    public TcpConnectionState(
+        Socket upStreamSocket,
+        Socket downStreamSocket,
+        byte[] upStreamBuffer,
+        byte[] downStreamBuffer,
+        EndPoint upStreamEndPoint,
+        EndPoint downStreamEndPoint,
+        Target target)
+        : base(
+            upStreamSocket,
+            downStreamSocket,
+            upStreamBuffer,
+            downStreamBuffer,
+            upStreamEndPoint,
+            downStreamEndPoint,
+            target)
     {
-        public TcpConnectionState(
-            Socket upStreamSocket,
-            Socket downStreamSocket,
-            byte[] upStreamBuffer,
-            byte[] downStreamBuffer,
-            EndPoint upStreamEndPoint,
-            EndPoint downStreamEndPoint,
-            Target target)
-            : base(
-                upStreamSocket,
-                downStreamSocket,
-                upStreamBuffer,
-                downStreamBuffer,
-                upStreamEndPoint,
-                downStreamEndPoint,
-                target)
-        {
-        }
+    }
 
-        public override bool Close()
+    public override bool Close()
+    {
+        lock (this.stateLock)
         {
-            lock (this.stateLock)
+            if (!this.connected)
             {
-                if (!this.connected)
-                {
-                    return false;
-                }
-
-                this.connected = false;
-
-                this.UpStreamSocket.Close();
-                this.DownStreamSocket.Close();
-
-                return true;
+                return false;
             }
+
+            this.connected = false;
+
+            this.UpStreamSocket.Close();
+            this.DownStreamSocket.Close();
+
+            return true;
         }
     }
 }

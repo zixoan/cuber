@@ -1,15 +1,14 @@
 ﻿using Zixoan.Cuber.Server.Balancing;
 
-namespace Zixoan.Cuber.Server.Proxy
+namespace Zixoan.Cuber.Server.Proxy;
+
+public abstract class ProxyBase : IProxy
 {
-    public abstract class ProxyBase : IProxy
-    {
-        protected readonly ILoadBalanceStrategy loadBalanceStrategy;
+    protected readonly ILoadBalanceStrategy loadBalanceStrategy;
 
-        protected ProxyBase(ILoadBalanceStrategy loadBalanceStrategy)
-            => this.loadBalanceStrategy = loadBalanceStrategy; 
+    protected ProxyBase(ILoadBalanceStrategy loadBalanceStrategy)
+        => this.loadBalanceStrategy = loadBalanceStrategy; 
 
-        public abstract void Start();
-        public abstract void Stop();
-    }
+    public abstract void Start();
+    public abstract void Stop();
 }

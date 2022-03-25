@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 
-namespace Zixoan.Cuber.Server.Stats
+namespace Zixoan.Cuber.Server.Stats;
+
+public interface IStatsService
 {
-    public interface IStatsService
-    {
-        void Add(string key, ProxyStats proxyStats);
-        ProxyStats? Get(string key);
-        IReadOnlyDictionary<string, ProxyStats> Get();
-        void Remove(string key);
-    }
+    void Add(string key, ProxyStats proxyStats);
+    ProxyStats? Get(string key);
+    IReadOnlyDictionary<string, ProxyStats> Get();
+    void Remove(string key);
 }

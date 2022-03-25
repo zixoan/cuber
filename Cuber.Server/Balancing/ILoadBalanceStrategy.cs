@@ -2,10 +2,9 @@
 
 using Zixoan.Cuber.Server.Config;
 
-namespace Zixoan.Cuber.Server.Balancing
+namespace Zixoan.Cuber.Server.Balancing;
+
+public interface ILoadBalanceStrategy
 {
-    public interface ILoadBalanceStrategy
-    {
-        Target? GetTarget(EndPoint? sourceEndPoint);
-    }
+    Target? GetTarget(EndPoint? sourceEndPoint);
 }

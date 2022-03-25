@@ -4,41 +4,40 @@ using Microsoft.Extensions.Logging;
 
 using Zixoan.Cuber.Server.Balancing;
 
-namespace Zixoan.Cuber.Server.Proxy.Multi
+namespace Zixoan.Cuber.Server.Proxy.Multi;
+
+public class MultiProxy : ProxyBase
 {
-    public class MultiProxy : ProxyBase
+    private readonly ILogger<MultiProxy> logger;
+    private readonly IReadOnlyList<IProxy> proxies;
+
+    public MultiProxy(
+        ILogger<MultiProxy> logger,
+        IReadOnlyList<IProxy> proxies,
+        ILoadBalanceStrategy loadBalanceStrategy)
+        : base(loadBalanceStrategy)
     {
-        private readonly ILogger<MultiProxy> logger;
-        private readonly IReadOnlyList<IProxy> proxies;
+        this.logger = logger;
+        this.proxies = proxies;
+    }
 
-        public MultiProxy(
-            ILogger<MultiProxy> logger,
-            IReadOnlyList<IProxy> proxies,
-            ILoadBalanceStrategy loadBalanceStrategy)
-            : base(loadBalanceStrategy)
+    public override void Start()
+    {
+        foreach (IProxy proxy in this.proxies)
         {
-            this.logger = logger;
-            this.proxies = proxies;
+            proxy.Start();
         }
 
-        public override void Start()
-        {
-            foreach (IProxy proxy in this.proxies)
-            {
-                proxy.Start();
-            }
+        this.logger.LogInformation("Multi proxy started");
+    }
 
-            this.logger.LogInformation("Multi proxy started");
+    public override void Stop()
+    {
+        foreach (IProxy proxy in this.proxies)
+        {
+            proxy.Stop();
         }
 
-        public override void Stop()
-        {
-            foreach (IProxy proxy in this.proxies)
-            {
-                proxy.Stop();
-            }
-
-            this.logger.LogInformation("Multi proxy stopped");
-        }
+        this.logger.LogInformation("Multi proxy stopped");
     }
 }

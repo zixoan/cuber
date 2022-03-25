@@ -4,24 +4,23 @@ using System.Net;
 using Zixoan.Cuber.Server.Config;
 using Zixoan.Cuber.Server.Provider;
 
-namespace Zixoan.Cuber.Server.Balancing
+namespace Zixoan.Cuber.Server.Balancing;
+
+public class RandomLoadBalanceStrategy : LoadBalanceStrategyBase
 {
-    public class RandomLoadBalanceStrategy : LoadBalanceStrategyBase
+    private readonly Random random;
+
+    public RandomLoadBalanceStrategy(ITargetProvider targetProvider)
+        : base(targetProvider)
     {
-        private readonly Random random;
+        this.random = new Random();
+    }
 
-        public RandomLoadBalanceStrategy(ITargetProvider targetProvider)
-            : base(targetProvider)
-        {
-            this.random = new Random();
-        }
-
-        public override Target? GetTarget(EndPoint? sourceEndPoint)
-        {
-            int count = this.targetProvider.Count;
-            return count == 0
-                ? null
-                : this.targetProvider[this.random.Next(count)];
-        }
+    public override Target? GetTarget(EndPoint? sourceEndPoint)
+    {
+        int count = this.targetProvider.Count;
+        return count == 0
+            ? null
+            : this.targetProvider[this.random.Next(count)];
     }
 }

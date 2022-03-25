@@ -1,8 +1,7 @@
-﻿namespace Zixoan.Cuber.Server.Proxy
+﻿namespace Zixoan.Cuber.Server.Proxy;
+
+public interface IProxy
 {
-    public interface IProxy
-    {
-        void Start();
-        void Stop();
-    }
+    void Start();
+    void Stop();
 }

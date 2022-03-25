@@ -5,33 +5,32 @@ using Microsoft.Extensions.DependencyInjection;
 using Zixoan.Cuber.Server.Config;
 using Zixoan.Cuber.Server.Web.Middleware;
 
-namespace Zixoan.Cuber.Server.Web
+namespace Zixoan.Cuber.Server.Web;
+
+public class CuberWebStartup
 {
-    public class CuberWebStartup
+    private readonly IConfiguration configuration;
+
+    public CuberWebStartup(IConfiguration configuration)
+        => this.configuration = configuration;
+
+    public void ConfigureServices(IServiceCollection services)
     {
-        private readonly IConfiguration configuration;
+        services.Configure<CuberOptions>(this.configuration.GetSection("Cuber"));
 
-        public CuberWebStartup(IConfiguration configuration)
-            => this.configuration = configuration;
+        services.AddControllers();
+        services.AddApiVersioning();
+    }
 
-        public void ConfigureServices(IServiceCollection services)
+    public void Configure(IApplicationBuilder app)
+    {
+        app.UseRouting();
+
+        app.UseMiddleware<HeaderApiKeyMiddleware>();
+
+        app.UseEndpoints(endpoints =>
         {
-            services.Configure<CuberOptions>(this.configuration.GetSection("Cuber"));
-
-            services.AddControllers();
-            services.AddApiVersioning();
-        }
-
-        public void Configure(IApplicationBuilder app)
-        {
-            app.UseRouting();
-
-            app.UseMiddleware<HeaderApiKeyMiddleware>();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
-        }
+            endpoints.MapControllers();
+        });
     }
 }

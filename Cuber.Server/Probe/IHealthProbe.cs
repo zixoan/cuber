@@ -3,10 +3,9 @@ using System.Threading.Tasks;
 
 using Zixoan.Cuber.Server.Config;
 
-namespace Zixoan.Cuber.Server.Probe
+namespace Zixoan.Cuber.Server.Probe;
+
+public interface IHealthProbe
 {
-    public interface IHealthProbe
-    {
-        Task<bool> IsReachableAsync(Target target, CancellationToken cancellationToken = default);
-    }
+    Task<bool> IsReachableAsync(Target target, CancellationToken cancellationToken = default);
 }
