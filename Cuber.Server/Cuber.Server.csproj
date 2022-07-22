@@ -5,6 +5,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Zixoan.Cuber.Server</RootNamespace>
     <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0" />

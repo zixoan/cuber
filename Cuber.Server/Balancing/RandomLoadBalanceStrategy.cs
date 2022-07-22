@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 
 using Zixoan.Cuber.Server.Config;
 using Zixoan.Cuber.Server.Provider;

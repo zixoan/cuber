@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 using Microsoft.AspNetCore.Mvc;
 
 using Zixoan.Cuber.Server.Stats;

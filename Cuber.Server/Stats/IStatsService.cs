@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Zixoan.Cuber.Server.Stats;
 
 public interface IStatsService

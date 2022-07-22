@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Zixoan.Cuber.Server.Config;
+﻿namespace Zixoan.Cuber.Server.Config;
 
 public class CuberOptions
 {

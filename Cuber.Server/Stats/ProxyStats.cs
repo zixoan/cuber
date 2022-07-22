@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-
 namespace Zixoan.Cuber.Server.Stats;
 
 public class ProxyStats

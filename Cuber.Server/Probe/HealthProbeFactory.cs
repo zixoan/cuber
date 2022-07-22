@@ -1,5 +1,3 @@
-using System;
-
 using Microsoft.Extensions.Options;
 
 using Zixoan.Cuber.Server.Config;

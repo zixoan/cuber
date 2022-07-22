@@ -6,6 +6,7 @@
     <IsPackable>false</IsPackable>
     <RootNamespace>Zixoan.Cuber.Server.Tests</RootNamespace>
     <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>

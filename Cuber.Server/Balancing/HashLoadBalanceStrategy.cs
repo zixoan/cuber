@@ -1,4 +1,3 @@
-using System;
 using System.Net;
 
 using Zixoan.Cuber.Server.Config;

@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-using Zixoan.Cuber.Server.Config;
+﻿using Zixoan.Cuber.Server.Config;
 
 namespace Zixoan.Cuber.Server.Probe;
 

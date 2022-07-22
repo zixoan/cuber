@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-
-namespace Zixoan.Cuber.Server.Config;
+﻿namespace Zixoan.Cuber.Server.Config;
 
 public class Target
 {
